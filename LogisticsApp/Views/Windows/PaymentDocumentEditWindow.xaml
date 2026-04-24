@@ -1,0 +1,98 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.PaymentDocumentEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 Title="Приходный кассовый ордер (ПКО)"
+                 Height="550" Width="650"
+                 WindowStartupLocation="CenterScreen"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1">
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="mah:NumericUpDown">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Margin="20" Background="{DynamicResource MahApps.Brushes.ThemeBackground}" BorderBrush="{DynamicResource MahApps.Brushes.Control.Border}" BorderThickness="1" CornerRadius="8" Padding="25">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="2" Opacity="0.05"/>
+            </Border.Effect>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
+                    <Border Width="40" Height="40" Background="#D1FAE5" CornerRadius="8" Margin="0,0,15,0">
+                        <iconPacks:PackIconMaterial Kind="CashPlus" Width="20" Height="20" Foreground="#059669" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Регистрация входящего платежа" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Зачисление денежных средств от контрагента" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Плательщик:" Width="140" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableCustomers}" SelectedItem="{Binding SelectedCustomer, ValidatesOnDataErrors=True}" DisplayMemberPath="Name" mah:TextBoxHelper.Watermark="Выберите контрагента..." Height="38"/>
+                </Grid>
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Заказ / Основание:" Width="140" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableOrders}" SelectedItem="{Binding SelectedOrder}" DisplayMemberPath="DisplayText" mah:TextBoxHelper.Watermark="Выберите неоплаченный заказ..." Height="38"/>
+                </Grid>
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="15"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="160"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Сумма (₽):" Width="140" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <mah:NumericUpDown Grid.Column="1" Value="{Binding Amount, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" StringFormat="N2" Minimum="0" Height="38" FontSize="15" FontWeight="Bold" Foreground="#059669" HideUpDownButtons="True"/>
+                    <TextBlock Grid.Column="3" Text="Дата:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <DatePicker Grid.Column="4" SelectedDate="{Binding PaymentDate}" Height="38"/>
+                </Grid>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Назначение:" Width="140" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding Description, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,15,0" FontWeight="SemiBold"/>
+                <Button Content="ПРОВЕСТИ ПЛАТЕЖ" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="220"/>
+            </StackPanel>
+        </Border>
+        <Border Grid.RowSpan="2" Background="#80FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <mah:ProgressRing IsActive="True" Foreground="{StaticResource PrimaryBrush}" Width="50" Height="50"/>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

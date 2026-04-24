@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=091a1f75-fa46-469a-8856-57fb27cd5903&lang=ru_RU" type="text/javascript"></script>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        let myMap;
+        let currentRoute;
+        let isInitialRequest = true;
+        let depotCircle;
+
+        ymaps.ready(init);
+
+        function init() {
+            myMap = new ymaps.Map("map", {
+                center: [53.2415, 34.3618],
+                zoom: 12,
+                controls: ['zoomControl', 'fullscreenControl', 'trafficControl']
+            });
+
+            myMap.events.add('dblclick', function (e) {
+                let coords = e.get('coords');
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage(JSON.stringify({ type: 'dblclick', lat: coords[0], lon: coords[1] }));
+                }
+            });
+
+            window.addEventListener('resize', function () {
+                if (myMap) myMap.container.fitToViewport();
+            });
+        }
+
+        function setCenter(lat, lon, zoom) {
+            if (myMap) {
+                myMap.setCenter([lat, lon], zoom);
+            }
+        }
+
+        function addMarker(lat, lon, title, color) {
+            if (!myMap) return;
+            let preset = color === 'Black' ? 'islands#blackIcon' : 'islands#redIcon';
+            let placemark = new ymaps.Placemark([lat, lon], { balloonContent: title }, { preset: preset });
+            myMap.geoObjects.add(placemark);
+        }
+
+        function drawGeofence(lat, lon, radiusMeters) {
+            if (!myMap) return;
+            if (depotCircle) myMap.geoObjects.remove(depotCircle);
+
+            depotCircle = new ymaps.Circle([[lat, lon], radiusMeters], {
+                balloonContent: "Городская зона доставки",
+                hintContent: "Зона 1 (без наценки)"
+            }, {
+                fillColor: "#10B98133",
+                strokeColor: "#10B981",
+                strokeOpacity: 0.8,
+                strokeWidth: 2
+            });
+            myMap.geoObjects.add(depotCircle);
+        }
+
+        function drawRoute(pointsJson) {
+            if (!myMap) return;
+            if (currentRoute) {
+                myMap.geoObjects.remove(currentRoute);
+            }
+            let points = JSON.parse(pointsJson);
+            var multiRoute = new ymaps.multiRouter.MultiRoute({
+                referencePoints: points,
+                params: { routingMode: 'auto' }
+            }, {
+                boundsAutoApply: true,
+                routeActiveStrokeWidth: 6,
+                routeActiveStrokeColor: '#3B82F6',
+                pinIconFillColor: '#EF4444'
+            });
+            currentRoute = multiRoute;
+            myMap.geoObjects.add(multiRoute);
+        }
+
+        function calculateRoute(pointsJson, doOptimize, isVisible) {
+            if (!myMap) return;
+            if (currentRoute) {
+                myMap.geoObjects.remove(currentRoute);
+                currentRoute = null;
+            }
+            isInitialRequest = true;
+            let points = JSON.parse(pointsJson);
+            let optimizedOrder = [];
+
+            if (doOptimize && points.length > 2) {
+                let unvisited = points.map((p, i) => ({ pt: p, idx: i })).slice(1, -1);
+                let current = { pt: points[0], idx: 0 };
+                optimizedOrder.push(0);
+
+                while (unvisited.length > 0) {
+                    let nearestIdx = 0;
+                    let minDist = Infinity;
+                    for (let i = 0; i < unvisited.length; i++) {
+                        let dist = ymaps.coordSystem.geo.getDistance(current.pt, unvisited[i].pt);
+                        if (dist < minDist) { minDist = dist; nearestIdx = i; }
+                    }
+                    current = unvisited[nearestIdx];
+                    optimizedOrder.push(current.idx);
+                    unvisited.splice(nearestIdx, 1);
+                }
+
+                optimizedOrder.push(points.length - 1);
+                let newPoints = [];
+                for (let i = 0; i < optimizedOrder.length; i++) {
+                    newPoints.push(points[optimizedOrder[i]]);
+                }
+                points = newPoints;
+            } else if (doOptimize) {
+                optimizedOrder = points.map((_, i) => i);
+            }
+
+            var multiRoute = new ymaps.multiRouter.MultiRoute({
+                referencePoints: points,
+                params: {
+                    routingMode: 'auto',
+                    avoidTrafficJams: true
+                }
+            }, {
+                boundsAutoApply: isVisible,
+                wayPointDraggable: isVisible,
+                viaPointDraggable: isVisible,
+                routeActiveStrokeWidth: 6,
+                routeActiveStrokeColor: '#3B82F6',
+                pinIconFillColor: '#EF4444'
+            });
+
+            if (isVisible) {
+                currentRoute = multiRoute;
+                myMap.geoObjects.add(multiRoute);
+            }
+
+            multiRoute.model.events.add('requestsuccess', function () {
+                var activeRoute = multiRoute.getActiveRoute();
+                if (activeRoute) {
+                    var distance = activeRoute.properties.get("distance").value / 1000.0;
+                    var time = activeRoute.properties.get("duration").value / 60.0;
+
+                    var trafficProp = activeRoute.properties.get("durationInTraffic");
+                    var timeInTraffic = trafficProp ? trafficProp.value / 60.0 : time;
+
+                    if (window.chrome && window.chrome.webview) {
+                        if (isInitialRequest) {
+                            window.chrome.webview.postMessage(JSON.stringify({
+                                type: 'routeMetrics',
+                                distance: distance,
+                                time: time,
+                                timeInTraffic: timeInTraffic,
+                                optimizedOrder: doOptimize ? optimizedOrder : null
+                            }));
+                            isInitialRequest = false;
+                        } else {
+                            window.chrome.webview.postMessage(JSON.stringify({
+                                type: 'routeInteractiveUpdate',
+                                distance: distance,
+                                time: time,
+                                timeInTraffic: timeInTraffic
+                            }));
+                        }
+                    }
+                }
+            });
+
+            multiRoute.model.events.add('requestfail', function (e) {
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage(JSON.stringify({
+                        type: 'routeError',
+                        message: e.get('error').message
+                    }));
+                }
+            });
+        }
+
+        function clearMap() {
+            if (!myMap) return;
+            myMap.geoObjects.removeAll();
+            if (depotCircle) myMap.geoObjects.add(depotCircle);
+            currentRoute = null;
+        }
+    </script>
+</body>
+</html>

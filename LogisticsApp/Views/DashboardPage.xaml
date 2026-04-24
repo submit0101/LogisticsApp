@@ -1,0 +1,379 @@
+﻿<UserControl x:Class="LogisticsApp.Views.DashboardPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1300"
+             Background="#F8F9FC">
+
+    <UserControl.Resources>
+        <!-- Цветовая палитра из скриншота -->
+        <SolidColorBrush x:Key="PrimaryBlue" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="TextDark" Color="#111827"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#6B7280"/>
+        <SolidColorBrush x:Key="TrendGreen" Color="#10B981"/>
+        <SolidColorBrush x:Key="TrendRed" Color="#EF4444"/>
+        <SolidColorBrush x:Key="BorderLight" Color="#F3F4F6"/>
+
+        <!-- Тень для карточек -->
+        <DropShadowEffect x:Key="CardShadow" Color="#000000" BlurRadius="25" ShadowDepth="4" Opacity="0.04"/>
+
+        <!-- Базовый стиль для карточек -->
+        <Style x:Key="DashboardCard" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="24"/>
+            <Setter Property="Effect" Value="{StaticResource CardShadow}"/>
+        </Style>
+
+        <!-- Стиль для прозрачных текстовых кнопок и иконок -->
+        <Style x:Key="TextTabButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для маленьких кнопок-фильтров (радиус 4) -->
+        <Style x:Key="SmallFilterButton" TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для закругленных кнопок времени (радиус 12) -->
+        <Style x:Key="RoundTabButton" TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="12" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Основная сетка дашборда -->
+    <Grid Margin="30">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="6.5*"/>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="3.5*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ЛЕВАЯ КОЛОНКА (Большие графики) -->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 1. Карточка "Visitor Analytics" (ТОП Клиентов + 4 Показателя) -->
+            <Border Grid.Row="0" Style="{StaticResource DashboardCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="250"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Заголовок карточки -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="ТОП-5 Клиентов по объему" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                        <Button Style="{StaticResource TextTabButton}" Command="{Binding RefreshCommand}" ToolTip="Опции" HorizontalAlignment="Right" Padding="0">
+                            <iconPacks:PackIconMaterial Kind="DotsHorizontal" Foreground="{StaticResource TextMuted}" Width="20" Height="20"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Столбчатая диаграмма -->
+                    <lvc:CartesianChart Grid.Row="1" Series="{Binding TopCustomersSeries}" Margin="0,10,0,10">
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Labels="{Binding CustomerLabels}">
+                                <lvc:Axis.Separator>
+                                    <lvc:Separator Step="1" Stroke="#00000000"/>
+                                </lvc:Axis.Separator>
+                            </lvc:Axis>
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis LabelFormatter="{Binding CustomerWeightFormatter}" MinValue="0">
+                                <lvc:Axis.Separator>
+                                    <lvc:Separator StrokeDashArray="4" Stroke="#E5E7EB"/>
+                                </lvc:Axis.Separator>
+                            </lvc:Axis>
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+
+                    <!-- Разделитель -->
+                    <Separator Grid.Row="2" Margin="0,20,0,25" Background="{StaticResource BorderLight}" Height="2"/>
+
+                    <!-- Сетка из 4 показателей -->
+                    <Grid Grid.Row="3">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="20"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Показатель 1 -->
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <Grid>
+                                <TextBlock Text="{Binding ActiveRoutesCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <iconPacks:PackIconMaterial Kind="ArrowUp" Width="10" Height="10" Foreground="{StaticResource TrendGreen}" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="12%" Foreground="{StaticResource TrendGreen}" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Активные рейсы" Foreground="{StaticResource TextMuted}" FontSize="13" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Показатель 2 -->
+                        <StackPanel Grid.Row="0" Grid.Column="1">
+                            <Grid>
+                                <TextBlock Text="{Binding DeliveredWeightToday, StringFormat={}{0:N1} Т}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <iconPacks:PackIconMaterial Kind="ArrowUp" Width="10" Height="10" Foreground="{StaticResource TrendGreen}" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="8%" Foreground="{StaticResource TrendGreen}" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Доставлено сегодня" Foreground="{StaticResource TextMuted}" FontSize="13" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Показатель 3 -->
+                        <StackPanel Grid.Row="2" Grid.Column="0">
+                            <Grid>
+                                <TextBlock Text="{Binding AvailableVehiclesCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <iconPacks:PackIconMaterial Kind="ArrowUp" Width="10" Height="10" Foreground="{StaticResource TrendGreen}" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="2%" Foreground="{StaticResource TrendGreen}" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Свободные машины" Foreground="{StaticResource TextMuted}" FontSize="13" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Показатель 4 -->
+                        <StackPanel Grid.Row="2" Grid.Column="1">
+                            <Grid>
+                                <TextBlock Text="{Binding PendingOrdersCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <iconPacks:PackIconMaterial Kind="ArrowDown" Width="10" Height="10" Foreground="{StaticResource TrendRed}" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="5%" Foreground="{StaticResource TrendRed}" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Новые заказы" Foreground="{StaticResource TextMuted}" FontSize="13" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 2. Карточка "Mobile Session" (Статусы Автопарка) -->
+            <Border Grid.Row="2" Style="{StaticResource DashboardCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="Статусы автопарка" FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                        <Button Style="{StaticResource TextTabButton}" Command="{Binding RefreshCommand}" ToolTip="Опции" HorizontalAlignment="Right" Padding="0">
+                            <iconPacks:PackIconMaterial Kind="DotsHorizontal" Foreground="{StaticResource TextMuted}" Width="20" Height="20"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Изящная кольцевая диаграмма -->
+                    <lvc:PieChart Grid.Row="1" Series="{Binding VehicleStatusSeries}" InnerRadius="60" LegendLocation="Bottom" Hoverable="True" Margin="0,20,0,0">
+                        <lvc:PieChart.ChartLegend>
+                            <lvc:DefaultLegend BulletSize="12" Foreground="{StaticResource TextMuted}" Margin="0,15,0,0"/>
+                        </lvc:PieChart.ChartLegend>
+                    </lvc:PieChart>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ПРАВАЯ КОЛОНКА -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 3. Карточка "Быстрые действия" -->
+            <Border Grid.Row="0" Style="{StaticResource DashboardCard}">
+                <StackPanel>
+                    <!-- "Вкладки" (Теперь это кликабельные кнопки) -->
+                    <Grid Margin="0,0,0,25">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Управление" Command="{Binding RefreshCommand}" Style="{StaticResource TextTabButton}" Foreground="{StaticResource PrimaryBlue}" FontWeight="Bold" BorderThickness="0,0,0,2" BorderBrush="{StaticResource PrimaryBlue}" Padding="0,0,0,10"/>
+                        <Button Grid.Column="1" Content="Отчеты" Command="{Binding RefreshCommand}" Style="{StaticResource TextTabButton}" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold" BorderThickness="0,0,0,2" BorderBrush="{StaticResource BorderLight}" Padding="0,0,0,10"/>
+                    </Grid>
+
+                    <TextBlock Text="Поиск заказа" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,0,5"/>
+                    <Border Background="#F9FAFB" CornerRadius="8" BorderBrush="{StaticResource BorderLight}" BorderThickness="1" Padding="12,10" Margin="0,0,0,15">
+                        <Grid>
+                            <!-- Поле ввода вместо статичного текста для поиска -->
+                            <TextBox BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextDark}" VerticalAlignment="Center" Margin="0,0,20,0" Padding="0"/>
+                            <TextBlock Text="№ заказа или клиент..." Foreground="#9CA3AF" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource PreviousData}}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Button Style="{StaticResource TextTabButton}" Command="{Binding RefreshCommand}" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <iconPacks:PackIconMaterial Kind="Magnify" Foreground="#9CA3AF"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="Быстрый фильтр" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,0,5"/>
+                    <Border Background="#F9FAFB" CornerRadius="8" BorderBrush="{StaticResource BorderLight}" BorderThickness="1" Padding="12,10" Margin="0,0,0,25">
+                        <Grid>
+                            <TextBlock Text="Сегодня" Foreground="{StaticResource TextDark}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <!-- Кнопки-фильтры 2x и Max -->
+                                <Button Content="2x" Command="{Binding RefreshCommand}" Style="{StaticResource SmallFilterButton}" Background="#E0E7FF" Foreground="{StaticResource PrimaryBlue}" FontSize="11" FontWeight="Bold" Padding="8,4" Margin="0,0,5,0"/>
+                                <Button Content="Max" Command="{Binding RefreshCommand}" Style="{StaticResource SmallFilterButton}" Background="#E0E7FF" Foreground="{StaticResource PrimaryBlue}" FontSize="11" FontWeight="Bold" Padding="8,4"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Большая синяя кнопка -->
+                    <Button Content="ОБНОВИТЬ ДАННЫЕ" Command="{Binding RefreshCommand}" Background="{StaticResource PrimaryBlue}" Foreground="White" FontWeight="Bold" FontSize="14" Padding="0,15" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#2563EB"/>
+                                        <!-- Более темный синий при наведении -->
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#1D4ED8"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- 4. Карточка "Динамика" -->
+            <Border Grid.Row="2" Style="{StaticResource DashboardCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <TextBlock Text="Динамика (7 дней)" Foreground="{StaticResource TextMuted}" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="Грузооборот" HorizontalAlignment="Right" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
+                        <TextBlock Text="968,648" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextDark}" VerticalAlignment="Bottom"/>
+                        <TextBlock Text="+13.5%" Foreground="{StaticResource TrendGreen}" FontSize="14" FontWeight="Bold" Margin="10,0,0,5" VerticalAlignment="Bottom"/>
+                    </StackPanel>
+
+                    <!-- Линейный график -->
+                    <lvc:CartesianChart Grid.Row="2" Series="{Binding WeightSeries}" Margin="0,0,0,15">
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Labels="{Binding DateLabels}" ShowLabels="False">
+                                <lvc:Axis.Separator>
+                                    <lvc:Separator Stroke="#00000000"/>
+                                </lvc:Axis.Separator>
+                            </lvc:Axis>
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis ShowLabels="False">
+                                <lvc:Axis.Separator>
+                                    <lvc:Separator Stroke="#00000000"/>
+                                </lvc:Axis.Separator>
+                            </lvc:Axis>
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+
+                    <!-- Тайм-табы снизу графика (Теперь это интерактивные кнопки) -->
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Content="Yearly" Command="{Binding RefreshCommand}" Style="{StaticResource TextTabButton}" Foreground="{StaticResource PrimaryBlue}" FontWeight="SemiBold" FontSize="12"/>
+                        <Button Grid.Column="1" Content="Month" Command="{Binding RefreshCommand}" Style="{StaticResource TextTabButton}" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+                        <Button Grid.Column="2" Content="Day" Command="{Binding RefreshCommand}" Style="{StaticResource TextTabButton}" Foreground="{StaticResource TextMuted}" FontSize="12"/>
+
+                        <!-- Активная кнопка "Hour" -->
+                        <Button Grid.Column="3" Content="Hour" Command="{Binding RefreshCommand}" Style="{StaticResource RoundTabButton}" Background="{StaticResource PrimaryBlue}" Foreground="White" FontWeight="Bold" FontSize="12" Padding="0,6"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

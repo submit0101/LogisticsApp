@@ -1,0 +1,533 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.WaybillEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 xmlns:local="clr-namespace:LogisticsApp.Views.Windows"
+                 xmlns:core="clr-namespace:LogisticsApp.Core"
+                 Title="Путевой лист"
+                 Height="820" Width="1200"
+                 WindowStartupLocation="CenterScreen"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1">
+
+    <mah:MetroWindow.Resources>
+        <local:WaybillInverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <core:WaybillStatusToTextConverter x:Key="WaybillStatusToTextConverter"/>
+        <core:WaybillStatusToColorConverter x:Key="WaybillStatusToColorConverter"/>
+        <local:WaybillPointStatusToTextConverter x:Key="WaybillPointStatusToTextConverter"/>
+        <local:WaybillPointStatusToColorConverter x:Key="WaybillPointStatusToColorConverter"/>
+        <local:PartialDeliveryVisibilityConverter x:Key="PartialDeliveryVisibilityConverter"/>
+
+        <!-- ИСПРАВЛЕНИЕ: Теперь используется правильный конвертер для Visibility -->
+        <local:WaybillInverseBooleanToVisibilityConverter x:Key="InverseVisibilityConverter"/>
+
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="mah:NumericUpDown">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+
+    <Grid>
+        <Grid IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" Padding="20,15" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,30,0">
+                        <TextBlock Text="Дата выписки:" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <DatePicker SelectedDate="{Binding DateCreate}" IsEnabled="False" Width="150" Height="40"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,30,0">
+                        <TextBlock Text="Транспортное средство:" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableVehicles}" 
+                                  SelectedItem="{Binding SelectedVehicle, ValidatesOnDataErrors=True}" 
+                                  mah:TextBoxHelper.Watermark="Выберите ТС..." 
+                                  Height="40" IsEnabled="{Binding IsEditable}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding RegNumber}" FontWeight="Bold" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Model}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="0,0,30,0" Width="300">
+                        <TextBlock Text="Водитель (Экспедитор):" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableDrivers}" 
+                                  SelectedItem="{Binding SelectedDriver, ValidatesOnDataErrors=True}" 
+                                  DisplayMemberPath="FullName"
+                                  mah:TextBoxHelper.Watermark="Выберите водителя..." 
+                                  Height="40" IsEnabled="{Binding IsEditable}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <TextBlock Text="Статус рейса:" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,5" HorizontalAlignment="Right"/>
+                        <Border Background="{Binding Status, Converter={StaticResource WaybillStatusToColorConverter}}" CornerRadius="4" Padding="15,8">
+                            <TextBlock Text="{Binding Status, Converter={StaticResource WaybillStatusToTextConverter}}" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TabControl Grid.Row="1" Margin="10,15,10,0" mah:TabControlHelper.Underlined="TabPanel" Background="Transparent" BorderThickness="0">
+                <TabItem Header="Маршрут и Заказы" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <Grid Margin="5,10,5,5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" IsEnabled="{Binding IsEditable}">
+                                <ComboBox ItemsSource="{Binding AvailableOrders}" 
+                                          SelectedItem="{Binding SelectedOrderToAdd}" 
+                                          mah:TextBoxHelper.Watermark="Выберите заказ для добавления..." 
+                                          Width="350" Height="40" Margin="0,0,10,0">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding OrderID, StringFormat=№{0}}" FontWeight="Bold" Margin="0,0,10,0"/>
+                                                <TextBlock Text="{Binding Customer.Name}" TextTrimming="CharacterEllipsis" MaxWidth="250"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Content="+ ДОБАВИТЬ В МАРШРУТ" Command="{Binding AddPointCommand}" Style="{StaticResource PrimaryButton}" Height="40"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button Command="{Binding MovePointUpCommand}" Style="{StaticResource MenuButton}" ToolTip="Переместить вверх" Margin="0,0,5,0">
+                                    <iconPacks:PackIconMaterial Kind="ArrowUp" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </Button>
+                                <Button Command="{Binding MovePointDownCommand}" Style="{StaticResource MenuButton}" ToolTip="Переместить вниз" Margin="0,0,15,0">
+                                    <iconPacks:PackIconMaterial Kind="ArrowDown" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </Button>
+                                <Button Content="УДАЛИТЬ" Command="{Binding RemovePointCommand}" Style="{StaticResource MenuButton}" Foreground="#D32F2F" IsEnabled="{Binding IsEditable}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <DataGrid ItemsSource="{Binding Points}" SelectedItem="{Binding SelectedPoint}" AutoGenerateColumns="False" CanUserAddRows="False" Margin="10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="№" Binding="{Binding SequenceNumber}" Width="50" IsReadOnly="True" FontWeight="Bold"/>
+                                    <DataGridTextColumn Header="Заказ" Binding="{Binding OrderID}" Width="70" IsReadOnly="True" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Клиент" Binding="{Binding Order.Customer.Name}" Width="200" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Адрес доставки" Binding="{Binding Order.Customer.Address}" Width="*" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Вес (кг)" Binding="{Binding Order.WeightKG, StringFormat={}{0:N2}}" Width="90" IsReadOnly="True" FontWeight="Bold"/>
+                                    <DataGridTemplateColumn Header="Отметка диспетчера" Width="200">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ComboBox ItemsSource="{Binding DataContext.AvailablePointStatuses, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              SelectedItem="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
+                                                              IsEnabled="{Binding DataContext.IsCompleted, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"
+                                                              Width="180" BorderThickness="0" Background="Transparent">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock Text="{Binding Converter={StaticResource WaybillPointStatusToTextConverter}}" 
+                                                                           Foreground="{Binding Converter={StaticResource WaybillPointStatusToColorConverter}}" FontWeight="SemiBold"/>
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Факт. вес" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <mah:NumericUpDown Value="{Binding DeliveredWeightKG, UpdateSourceTrigger=PropertyChanged}" 
+                                                                   Minimum="0" StringFormat="N2" 
+                                                                   Visibility="{Binding Status, Converter={StaticResource PartialDeliveryVisibilityConverter}}"
+                                                                   IsEnabled="{Binding DataContext.IsCompleted, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+
+                        <Border Grid.Row="2" Background="#F8FAFC" BorderThickness="1" BorderBrush="#E2E8F0" CornerRadius="8" Padding="15" Margin="0,15,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,15,0" Visibility="{Binding IsWeightOverload, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <iconPacks:PackIconMaterial Kind="AlertCircleOutline" Foreground="#DC2626" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="ПЕРЕГРУЗ ПО ВЕСУ!" Foreground="#991B1B" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,15,0" Visibility="{Binding IsVolumeOverload, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <iconPacks:PackIconMaterial Kind="AlertCircleOutline" Foreground="#DC2626" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="ПРЕВЫШЕН ОБЪЕМ!" Foreground="#991B1B" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center" Margin="0,0,25,0">
+                                        <TextBlock Text="Общий вес брутто:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                                        <TextBlock Text="{Binding CurrentTotalWeight, StringFormat={}{0:N2} кг}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Расчетный объем:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                                        <TextBlock Text="{Binding CurrentTotalVolume, StringFormat={}{0:N1} м³}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <StackPanel Margin="0,0,25,0" HorizontalAlignment="Right">
+                                        <TextBlock Text="Дистанция:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" HorizontalAlignment="Right"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <mah:NumericUpDown Value="{Binding TotalDistance, UpdateSourceTrigger=PropertyChanged}" Minimum="0" StringFormat="N1" Width="100" HideUpDownButtons="True" BorderThickness="0,0,0,1" Background="Transparent" FontWeight="Bold" FontSize="16" Foreground="{StaticResource PrimaryBrush}" IsEnabled="{Binding IsEditable}"/>
+                                            <TextBlock Text="км" FontWeight="Bold" FontSize="16" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <Button Content="ОПТИМИЗИРОВАТЬ МАРШРУТ" Command="{Binding OptimizeRouteCommand}" Style="{StaticResource PrimaryButton}" Background="#10B981" Height="40" IsEnabled="{Binding IsEditable}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Метрики и ГСМ" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="5,10,5,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,10,0" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="Показания приборов" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="1" Text="Выезд" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10"/>
+                                        <TextBlock Grid.Column="2" Text="Возврат" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Одометр (км):" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <mah:NumericUpDown Grid.Column="1" Value="{Binding OdometerOut}" IsReadOnly="True" Background="#F1F5F9" StringFormat="N0" Height="38"/>
+                                        <mah:NumericUpDown Grid.Column="3" Value="{Binding OdometerIn, UpdateSourceTrigger=PropertyChanged}" Minimum="{Binding OdometerOut}" StringFormat="N0" Height="38" IsEnabled="{Binding IsInTransit}"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,25">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Остаток ГСМ (л):" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <mah:NumericUpDown Grid.Column="1" Value="{Binding FuelOut}" IsReadOnly="True" Background="#F1F5F9" StringFormat="N1" Height="38"/>
+                                        <mah:NumericUpDown Grid.Column="3" Value="{Binding FuelIn, UpdateSourceTrigger=PropertyChanged}" Minimum="0" StringFormat="N1" Height="38" IsEnabled="{Binding IsInTransit}"/>
+                                    </Grid>
+
+                                    <Separator Margin="0,10,0,25" Background="{StaticResource BorderBrush}"/>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="120"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="Нормативный расход:" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Рассчитано автоматически на базе расстояния, веса и надбавок." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,15,0"/>
+                                        </StackPanel>
+                                        <TextBox Grid.Column="1" Text="{Binding CalculatedFuelConsumption, Mode=OneWay, StringFormat={}{0:N1} л.}" IsReadOnly="True" Background="#FFFBEB" BorderBrush="#F59E0B" Foreground="#D97706" FontWeight="Bold" FontSize="16" Height="42" TextAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="10,0,0,0" VerticalAlignment="Stretch">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Text="Заправки в рейсе (Чеки АЗС)" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20"/>
+
+                                    <Grid Grid.Row="1" Margin="0,0,0,20" IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBooleanConverter}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Чек №" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,10,5"/>
+                                        <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding NewTicketNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,15" Height="36"/>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="Объем (л)" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,10,5"/>
+                                        <mah:NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding NewTicketVolume, UpdateSourceTrigger=PropertyChanged}" Minimum="0" StringFormat="N2" Margin="0,0,10,15" Height="36"/>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Сумма (₽)" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,5"/>
+                                        <mah:NumericUpDown Grid.Row="1" Grid.Column="2" Value="{Binding NewTicketAmount, UpdateSourceTrigger=PropertyChanged}" Minimum="0" StringFormat="N2" Margin="0,0,0,15" Height="36"/>
+
+                                        <Button Grid.Row="2" Grid.ColumnSpan="3" Content="+ ДОБАВИТЬ ЧЕК" Command="{Binding AddFuelTicketCommand}" Style="{StaticResource MenuButton}" BorderBrush="{StaticResource PrimaryBrush}" BorderThickness="1" Foreground="{StaticResource PrimaryBrush}" Height="36"/>
+                                    </Grid>
+
+                                    <DataGrid Grid.Row="2" ItemsSource="{Binding FuelTickets}" SelectedItem="{Binding SelectedFuelTicket}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="№ Чека" Binding="{Binding TicketNumber}" Width="*" FontWeight="SemiBold"/>
+                                            <DataGridTextColumn Header="Литры" Binding="{Binding VolumeLiters, StringFormat={}{0:N2}}" Width="80" Foreground="#10B981" FontWeight="Bold"/>
+                                            <DataGridTextColumn Header="Сумма" Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="90"/>
+                                            <DataGridTemplateColumn Width="50">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Command="{Binding DataContext.RemoveFuelTicketCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MenuButton}" Padding="4" ToolTip="Удалить" IsEnabled="{Binding DataContext.IsCompleted, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBooleanConverter}}">
+                                                            <iconPacks:PackIconMaterial Kind="Close" Foreground="#D32F2F" Width="14" Height="14"/>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Выполнение рейса" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="5,10,5,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,10,0" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="Диспетчеризация по времени" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Плановый выезд:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <DatePicker SelectedDate="{Binding DateOut}" Width="130" Margin="0,0,10,0" IsEnabled="{Binding IsEditable}"/>
+                                            <mah:TimePicker SelectedDateTime="{Binding TimeOut}" Width="100" IsEnabled="{Binding IsEditable}"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Фактический выезд:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding DepartureTime, StringFormat=dd.MM.yyyy HH:mm}" IsReadOnly="True" Background="#F1F5F9" Height="38" VerticalContentAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Расчетное прибытие:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding ExpectedArrivalTime, StringFormat=dd.MM.yyyy HH:mm}" IsReadOnly="True" Background="#F1F5F9" Height="38" VerticalContentAlignment="Center"/>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Фактическое прибытие:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding ActualArrivalTime, StringFormat=dd.MM.yyyy HH:mm}" IsReadOnly="True" Background="#F1F5F9" Height="38" VerticalContentAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="10,0,0,0" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="Происшествия и задержки" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                    <TextBlock Text="В данный момент рейс выполняется в штатном режиме." Foreground="#10B981" FontWeight="SemiBold" Visibility="{Binding HasIncident, Converter={StaticResource InverseVisibilityConverter}}" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Если водитель сообщил о проблеме, зафиксируйте ее с помощью красной кнопки «СООБЩИТЬ О ЧП» в нижней панели." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Visibility="{Binding HasIncident, Converter={StaticResource InverseVisibilityConverter}}"/>
+
+                                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="8" Padding="15" Visibility="{Binding HasIncident, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <iconPacks:PackIconMaterial Kind="AlertOctagon" Foreground="#DC2626" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <TextBlock Text="ЗАФИКСИРОВАНО ЧП" FontWeight="Bold" Foreground="#991B1B" FontSize="14" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding IncidentType, StringFormat=Тип: {0}}" FontWeight="SemiBold" Foreground="#7F1D1D" Margin="0,0,0,5"/>
+                                            <TextBlock Text="{Binding IncidentDescription}" TextWrapping="Wrap" Foreground="#7F1D1D" Margin="0,0,0,10"/>
+                                            <TextBlock Text="{Binding DelayMinutes, StringFormat=Задержка: +{0} мин.}" FontWeight="Bold" Foreground="#DC2626" Margin="0,0,0,15"/>
+                                            <Button Content="СНЯТЬ СТАТУС ЧП (ПРОБЛЕМА РЕШЕНА)" Command="{Binding ResolveIncidentCommand}" Style="{StaticResource MenuButton}" Background="White" BorderBrush="#DC2626" BorderThickness="1" Foreground="#DC2626" Height="36"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,15">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding IsReportingIncident, Converter={StaticResource InverseVisibilityConverter}}">
+                        <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,10,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+
+                        <Button Command="{Binding SaveDraftCommand}" Style="{StaticResource MenuButton}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,10,0" Visibility="{Binding IsEditable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="ContentSaveOutline" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text="СОХРАНИТЬ ЧЕРНОВИК" VerticalAlignment="Center" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding UnpostCommand}" Style="{StaticResource MenuButton}" Margin="0,0,10,0" Visibility="{Binding IsReady, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="FileUndoOutline" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="#F59E0B"/>
+                                <TextBlock Text="ОТМЕНИТЬ ПРОВЕДЕНИЕ" VerticalAlignment="Center" FontWeight="Bold" Foreground="#F59E0B"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ApproveRouteCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal" Margin="5,0">
+                                <iconPacks:PackIconMaterial Kind="CheckAll" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="К МАРШРУТУ ГОТОВ" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding StartRouteCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0" Visibility="{Binding IsReady, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal" Margin="5,0">
+                                <iconPacks:PackIconMaterial Kind="TruckFastOutline" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="НАЧАТЬ ВЫЕЗД" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding OpenIncidentPanelCommand}" Background="#EF4444" Foreground="White" BorderThickness="0" Margin="0,0,10,0" Visibility="{Binding IsInTransit, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="15,0" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="AlertCircleOutline" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="СООБЩИТЬ О ЧП" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FinishRouteCommand}" Background="#B71C1C" Foreground="White" BorderThickness="0" Visibility="{Binding IsInTransit, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="15,0" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="FlagCheckered" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="ЗАВЕРШИТЬ РЕЙС" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding IsReportingIncident, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                        <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="15,5" Margin="0,0,15,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <iconPacks:PackIconMaterial Kind="AlertOctagon" Foreground="#DC2626" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="ФИКСАЦИЯ ПРОБЛЕМЫ:" VerticalAlignment="Center" FontWeight="Bold" Foreground="#DC2626"/>
+                            </StackPanel>
+                        </Border>
+
+                        <ComboBox ItemsSource="{Binding AvailableIncidentTypes}" SelectedItem="{Binding NewIncidentType}" Width="150" Margin="0,0,10,0" Height="38" mah:TextBoxHelper.Watermark="Что случилось?"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                            <TextBlock Text="Задержка:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                            <mah:NumericUpDown Value="{Binding NewIncidentDelay}" Minimum="10" Maximum="1440" Width="90" Height="38" ToolTip="В минутах"/>
+                        </StackPanel>
+
+                        <TextBox Text="{Binding NewIncidentDescription}" Width="250" mah:TextBoxHelper.Watermark="Краткое описание проблемы..." Margin="0,0,15,0" Height="38"/>
+
+                        <Button Content="ОТМЕНА" Command="{Binding CancelIncidentCommand}" Style="{StaticResource MenuButton}" Margin="0,0,10,0"/>
+                        <Button Command="{Binding RegisterIncidentCommand}" Background="#DC2626" Foreground="White" Padding="20,0" BorderThickness="0" Cursor="Hand" Height="38">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="Send" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="ОТПРАВИТЬ СИГНАЛ" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Background="#99FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="999">
+            <mah:ProgressRing IsActive="True" Foreground="{StaticResource PrimaryBrush}" Width="60" Height="60"/>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

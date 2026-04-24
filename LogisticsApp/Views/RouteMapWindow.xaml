@@ -1,0 +1,73 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.RouteMapWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+                 Title="{Binding WindowTitle}" 
+                 Height="760" Width="1200" 
+                 WindowStartupLocation="CenterScreen"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1"
+                 Loaded="Window_Loaded"
+                 Closed="Window_Closed">
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </mah:MetroWindow.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Padding="25">
+            <StackPanel>
+                <Border Background="{StaticResource PrimaryLightBrush}" CornerRadius="8" Padding="15" Margin="0,0,0,25">
+                    <StackPanel>
+                        <TextBlock Text="ПУТЕВОЙ ЛИСТ" Foreground="{StaticResource PrimaryDarkBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding WaybillTitle}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="#F5F5F5" Padding="15" CornerRadius="8" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="Текущий маршрут:" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,5"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock Text="Дистанция: " FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TotalDistanceKm, StringFormat={}{0:F2} км}" Foreground="#10B981" FontWeight="Bold"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Время в пути: " FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding TotalTimeMinutes, StringFormat={}{0:F0} мин}" Foreground="#3B82F6" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="Диспетчеризация:" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="Bold" FontSize="13" Margin="0,0,0,15"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <Border Width="36" Height="36" CornerRadius="18" Background="#F1F5F9" Margin="0,0,15,0">
+                        <iconPacks:PackIconMaterial Kind="Truck" Foreground="#475569" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Автомобиль" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding VehicleInfo}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
+                    <Border Width="36" Height="36" CornerRadius="18" Background="#F1F5F9" Margin="0,0,15,0">
+                        <iconPacks:PackIconMaterial Kind="AccountTieHat" Foreground="#475569" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Водитель" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding DriverName}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <wv2:WebView2 x:Name="MapWebView" Grid.Column="1" />
+
+        <Border Grid.ColumnSpan="2" Background="#99FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="999">
+            <mah:ProgressRing IsActive="True" Foreground="{StaticResource PrimaryBrush}" Width="60" Height="60"/>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

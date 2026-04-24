@@ -1,0 +1,255 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.CustomerEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+                 xmlns:models="clr-namespace:LogisticsApp.Models"
+                 xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+                 xmlns:services="clr-namespace:LogisticsApp.Services"
+                 xmlns:local="clr-namespace:LogisticsApp.Views.Windows"
+                 mc:Ignorable="d"
+                 Title="Карточка контрагента"
+                 Height="800" Width="1100"
+                 WindowStartupLocation="CenterScreen"
+                 ResizeMode="CanResize"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1">
+
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TabControl Grid.Row="0" Margin="10,15,10,0" mah:TabControlHelper.Underlined="TabPanel" Background="Transparent" BorderThickness="0">
+
+                <!-- ВКЛАДКА 1: ОСНОВНЫЕ ДАННЫЕ -->
+                <TabItem Header="Основные данные" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Левая колонка: Идентификация -->
+                            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Margin="5,10,5,5" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Идентификация" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                    <TextBlock Text="Вид контрагента:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <ComboBox SelectedValue="{Binding Type}" SelectedValuePath="Tag" Margin="0,0,0,25" Height="42">
+                                        <ComboBoxItem Content="Юридическое лицо" Tag="{x:Static models:CustomerType.LegalEntity}" />
+                                        <ComboBoxItem Content="Индивидуальный предприниматель" Tag="{x:Static models:CustomerType.Entrepreneur}" />
+                                        <ComboBoxItem Content="Физическое лицо" Tag="{x:Static models:CustomerType.PhysicalPerson}" />
+                                    </ComboBox>
+
+                                    <TextBlock Text="Наименование (короткое):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,25" Height="42" FontSize="15"/>
+
+                                    <TextBlock Text="Полное наименование:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" FontSize="15" VerticalContentAlignment="Top" Padding="10"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Правая колонка: Реквизиты и Автозаполнение -->
+                            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Margin="5,10,5,5" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Налоговые реквизиты" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                    <!-- Блок автозаполнения по ИНН -->
+                                    <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,25">
+                                        <StackPanel>
+                                            <TextBlock Text="Автозаполнение ФНС" FontWeight="Bold" Foreground="#1E40AF" Margin="0,0,0,10"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" Text="{Binding Inn, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" MaxLength="{Binding InnMaxLength}" mah:TextBoxHelper.Watermark="Введите ИНН..." Height="42" FontSize="15" FontWeight="SemiBold" Margin="0,0,10,0">
+                                                    <b:Interaction.Behaviors>
+                                                        <services:InnMaskBehavior />
+                                                    </b:Interaction.Behaviors>
+                                                </TextBox>
+                                                <Button Grid.Column="1" Command="{Binding FillByInnCommand}" Content="ЗАПОЛНИТЬ" Style="{StaticResource PrimaryButton}" Padding="15,0" Height="42"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <TextBlock Text="КПП:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Kpp, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" MaxLength="9" Margin="0,0,0,25" Height="42" FontSize="15">
+                                        <b:Interaction.Behaviors>
+                                            <services:NumericInputBehavior />
+                                        </b:Interaction.Behaviors>
+                                    </TextBox>
+
+                                    <TextBlock Text="{Binding OgrnLabel}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Ogrn, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" MaxLength="{Binding OgrnMaxLength}" Height="42" FontSize="15">
+                                        <b:Interaction.Behaviors>
+                                            <services:NumericInputBehavior />
+                                        </b:Interaction.Behaviors>
+                                    </TextBox>
+                                </StackPanel>
+                            </Border>
+
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ВКЛАДКА 2: АДРЕСА И КОНТАКТЫ -->
+                <TabItem Header="Адреса и контакты" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Левая колонка: Адреса -->
+                            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Margin="5,10,5,5" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Юридический адрес:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding LegalAddress, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,25" Height="100" TextWrapping="Wrap" AcceptsReturn="True" FontSize="14" VerticalContentAlignment="Top" Padding="10"/>
+
+                                    <TextBlock Text="Фактический (для логистики):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Height="100" TextWrapping="Wrap" AcceptsReturn="True" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" VerticalContentAlignment="Top" Padding="10"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Правая колонка: Контакты -->
+                            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Margin="5,10,5,5" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Контактное лицо (ФИО):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,25" Height="42" FontSize="15">
+                                        <b:Interaction.Behaviors>
+                                            <services:FioMaskBehavior />
+                                        </b:Interaction.Behaviors>
+                                    </TextBox>
+
+                                    <TextBlock Text="Телефон:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <Grid Margin="0,0,0,25">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0" SelectedIndex="{Binding PhoneMaskType}" Width="80" Margin="0,0,10,0" ToolTip="Формат кода (3 или 4 цифры)" Height="42">
+                                            <ComboBoxItem Content="3-ц"/>
+                                            <ComboBoxItem Content="4-ц"/>
+                                        </ComboBox>
+                                        <TextBox Grid.Column="1" Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" mah:TextBoxHelper.Watermark="+7 (___) ___-__-__" Height="42" FontSize="15" FontWeight="SemiBold">
+                                            <b:Interaction.Behaviors>
+                                                <services:PhoneMaskBehavior MaskType="{Binding PhoneMaskType}" />
+                                            </b:Interaction.Behaviors>
+                                        </TextBox>
+                                    </Grid>
+
+                                    <TextBlock Text="E-mail:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" mah:TextBoxHelper.Watermark="example@domain.com" Height="42" FontSize="15"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ВКЛАДКА 3: БАНКОВСКИЕ СЧЕТА -->
+                <TabItem Header="Банковские счета" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Margin="5,10,5,5" Padding="35" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" HorizontalAlignment="Left" Width="600">
+                        <StackPanel>
+                            <TextBlock Text="Финансовые реквизиты" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="БИК Банка:" VerticalAlignment="Center" Margin="0,0,15,30" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Bik, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" MaxLength="9" Margin="0,0,0,30" Height="42" FontSize="15" FontWeight="SemiBold">
+                                    <b:Interaction.Behaviors>
+                                        <services:NumericInputBehavior />
+                                    </b:Interaction.Behaviors>
+                                </TextBox>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Наименование банка:" VerticalAlignment="Center" Margin="0,0,15,30" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                                <ComboBox Grid.Row="1" Grid.Column="1" Text="{Binding BankName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" ItemsSource="{Binding AvailableBanks}" IsEditable="True" Margin="0,0,0,30" Height="42" FontSize="15"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Расчетный счет:" VerticalAlignment="Center" Margin="0,0,15,30" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CheckingAccount, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" MaxLength="20" Margin="0,0,0,30" Height="42" FontSize="15" FontWeight="SemiBold">
+                                    <b:Interaction.Behaviors>
+                                        <services:NumericInputBehavior />
+                                    </b:Interaction.Behaviors>
+                                </TextBox>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Корр. счет:" VerticalAlignment="Center" Margin="0,0,15,30" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CorrAccount, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" MaxLength="20" Margin="0,0,0,30" Height="42" FontSize="15" FontWeight="SemiBold">
+                                    <b:Interaction.Behaviors>
+                                        <services:NumericInputBehavior />
+                                    </b:Interaction.Behaviors>
+                                </TextBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+                <!-- ВКЛАДКА 4: ЛОГИСТИКА КАРТА -->
+                <TabItem Header="Логистика (Карта)" mah:HeaderedControlHelper.HeaderFontSize="15">
+                    <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Margin="5,10,5,5" Padding="20" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconMaterial Kind="Information" Foreground="#3B82F6" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Дважды кликните по карте, чтобы выбрать гео-точку разгрузки. Фактический адрес будет автоматически обновлен." Foreground="#1E40AF" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" ClipToBounds="True">
+                                <wv2:WebView2 x:Name="MapWebView" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+            </TabControl>
+
+            <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="25,20">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,20,0" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                    <Button Content="СОХРАНИТЬ И ЗАКРЫТЬ" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="260" Height="44" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</mah:MetroWindow>

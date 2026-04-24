@@ -1,0 +1,222 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.ProductEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 Title="Карточка товара"
+                 Height="700" Width="850"
+                 WindowStartupLocation="CenterScreen"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1">
+
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="mah:NumericUpDown">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TabControl Grid.Row="0" Margin="10,15,10,0" mah:TabControlHelper.Underlined="TabPanel" Background="Transparent" BorderThickness="0">
+            <TabItem Header="Основные реквизиты" mah:HeaderedControlHelper.HeaderFontSize="14">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5,10,5,5">
+                        <!-- БЛОК ИДЕНТИФИКАЦИИ -->
+                        <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Идентификация товара" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="Артикул / Код:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBox Text="{Binding Sku, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="Наименование (для печати):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="Штрихкод (базовый):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBox Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="Товарная группа:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <Grid Margin="0,0,0,25">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableGroups}" SelectedItem="{Binding SelectedGroup}" DisplayMemberPath="Name" mah:TextBoxHelper.Watermark="Без группы" Style="{StaticResource MahApps.Styles.ComboBox}"/>
+                                    <Button Grid.Column="1" Command="{Binding AddGroupCommand}" Style="{StaticResource PrimaryButton}" Width="40" Margin="10,0,0,0" ToolTip="Создать новую группу">
+                                        <iconPacks:PackIconMaterial Kind="Plus" Foreground="White" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- БЛОК ПОТРЕБИТЕЛЬСКИХ СВОЙСТВ (ИСПРАВЛЕНО И ПЕРЕИМЕНОВАНО) -->
+                        <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,15,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Потребительские и складские свойства" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="Базовая единица измерения:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <Grid Margin="0,0,0,25">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableUnits}" SelectedItem="{Binding SelectedBaseUnit, ValidatesOnDataErrors=True}" DisplayMemberPath="Name" mah:TextBoxHelper.Watermark="Выберите ед. изм." Style="{StaticResource MahApps.Styles.ComboBox}"/>
+                                    <Button Grid.Column="1" Command="{Binding AddUnitCommand}" Style="{StaticResource PrimaryButton}" Width="40" Margin="10,0,0,0" ToolTip="Создать новую ед. изм.">
+                                        <iconPacks:PackIconMaterial Kind="Plus" Foreground="White" Width="16" Height="16"/>
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="* Базовая ЕИ автоматически дублируется в ВГХ с коэффициентом 1." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" FontStyle="Italic" Margin="0,-15,0,25"/>
+
+                                <TextBlock Text="Срок годности (строка):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBox Text="{Binding ShelfLife, UpdateSourceTrigger=PropertyChanged}" mah:TextBoxHelper.Watermark="Например: 14 суток" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="Условия хранения (температура):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBox Text="{Binding StorageConditions, UpdateSourceTrigger=PropertyChanged}" mah:TextBoxHelper.Watermark="Например: от +2 до +6 С"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Упаковки и ВГХ" mah:HeaderedControlHelper.HeaderFontSize="14">
+                <Grid Margin="5,10,5,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" Padding="15" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,0,15">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                <TextBlock Text="Ед. изм." FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding AvailableUnits}" SelectedItem="{Binding NewPackagingUnit}" DisplayMemberPath="Name" Height="38"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                <TextBlock Text="Коэфф." FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <mah:NumericUpDown Value="{Binding NewPackagingCoefficient}" Minimum="0.0001" StringFormat="N4" Height="38"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                                <TextBlock Text="Вес (кг)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <mah:NumericUpDown Value="{Binding NewPackagingWeight}" Minimum="0" StringFormat="N3" Height="38"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Margin="0,0,10,0">
+                                <TextBlock Text="Объем (м³)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <mah:NumericUpDown Value="{Binding NewPackagingVolume}" Minimum="0" StringFormat="N4" Height="38"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Margin="0,0,10,0">
+                                <TextBlock Text="Штрихкод" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding NewPackagingBarcode}" Height="38"/>
+                            </StackPanel>
+                            <Button Grid.Column="5" Content="ДОБАВИТЬ" Command="{Binding AddPackagingCommand}" Style="{StaticResource PrimaryButton}" Height="38" VerticalAlignment="Bottom"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <DataGrid ItemsSource="{Binding Packagings}" SelectedItem="{Binding SelectedPackaging}" AutoGenerateColumns="False" CanUserAddRows="False" Margin="10">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Упаковка" Binding="{Binding Unit.Name}" Width="120" IsReadOnly="True" FontWeight="SemiBold"/>
+                                <DataGridTextColumn Header="Коэффициент" Binding="{Binding Coefficient, StringFormat={}{0:N4}}" Width="100" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Вес (кг)" Binding="{Binding WeightKG, StringFormat={}{0:N3}}" Width="100" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Объем (м³)" Binding="{Binding VolumeM3, StringFormat={}{0:N4}}" Width="100" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Штрихкод" Binding="{Binding Barcode}" Width="*" IsReadOnly="True"/>
+                                <DataGridTemplateColumn Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemovePackagingCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MenuButton}" Padding="5" ToolTip="Удалить">
+                                                <iconPacks:PackIconMaterial Kind="TrashCanOutline" Foreground="#D32F2F" Width="18" Height="18"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="История цен (Прайс-лист)" mah:HeaderedControlHelper.HeaderFontSize="14">
+                <Grid Margin="5,10,5,5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" Padding="15" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,0,15">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Действует с:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                            <DatePicker Grid.Column="1" SelectedDate="{Binding NewPriceDate}" Margin="0,0,20,0" Height="38"/>
+                            <TextBlock Grid.Column="2" Text="Цена (₽):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                            <mah:NumericUpDown Grid.Column="3" Value="{Binding NewPriceValue}" StringFormat="N2" Margin="0,0,20,0" Height="38"/>
+                            <Button Grid.Column="4" Content="ДОБАВИТЬ В ПРАЙС" Command="{Binding AddPriceCommand}" Style="{StaticResource PrimaryButton}" Height="38"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <DataGrid ItemsSource="{Binding Prices}" SelectedItem="{Binding SelectedPrice}" AutoGenerateColumns="False" CanUserAddRows="False" Margin="10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Начало действия" Binding="{Binding Period, StringFormat=dd.MM.yyyy}" Width="200" IsReadOnly="True" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Значение цены (₽)" Binding="{Binding Value, StringFormat={}{0:N2}}" Width="*" IsReadOnly="True" FontWeight="Bold" Foreground="#10B981"/>
+                                    <DataGridTemplateColumn Width="60">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.RemovePriceCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MenuButton}" Padding="5" ToolTip="Удалить">
+                                                    <iconPacks:PackIconMaterial Kind="TrashCanOutline" Foreground="#D32F2F" Width="18" Height="18"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,15,0" FontWeight="SemiBold"/>
+                <Button Content="СОХРАНИТЬ КАРТОЧКУ" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="220"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.RowSpan="2" Background="#80FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+            <mah:ProgressRing IsActive="True" Foreground="{StaticResource PrimaryBrush}" Width="50" Height="50"/>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

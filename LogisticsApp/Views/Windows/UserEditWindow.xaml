@@ -1,0 +1,79 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.UserEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 mc:Ignorable="d" 
+                 Title="Учетная запись сотрудника" 
+                 Height="620" Width="450"
+                 WindowStartupLocation="CenterScreen"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1"
+                 ResizeMode="NoResize">
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" 
+                           Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,25">
+            <Border Width="45" Height="45" Background="{StaticResource PrimaryLightBrush}" CornerRadius="8">
+                <iconPacks:PackIconMaterial Kind="ShieldAccount" Foreground="{StaticResource PrimaryDarkBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" Width="24" Height="24"/>
+            </Border>
+            <StackPanel Margin="15,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Доступ к системе" FontWeight="Bold" FontSize="18" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Настройка прав и авторизации" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="1" IsEnabled="{Binding IsLoading, Converter={StaticResource BoolToVis}, ConverterParameter=Inverted}">
+            <TextBlock Text="Логин (для входа в систему):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                     mah:TextBoxHelper.Watermark="Укажите уникальный логин..."
+                     mah:TextBoxHelper.ClearTextButton="True"
+                     Height="40" Margin="0,0,0,25"/>
+            <TextBlock Text="ФИО сотрудника:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                     mah:TextBoxHelper.Watermark="Иванов Иван Иванович"
+                     mah:TextBoxHelper.ClearTextButton="True"
+                     Height="40" Margin="0,0,0,25"/>
+            <TextBlock Text="Роль (Уровень доступа):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <ComboBox ItemsSource="{Binding AvailableRoles}"
+                      SelectedItem="{Binding SelectedRole, ValidatesOnDataErrors=True}"
+                      DisplayMemberPath="Name"
+                      Style="{StaticResource MahApps.Styles.ComboBox}"
+                      Height="40" Margin="0,0,0,25"/>
+            <TextBlock Text="Пароль:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <TextBox Text="{Binding PlainPassword, UpdateSourceTrigger=PropertyChanged}"
+                     mah:TextBoxHelper.Watermark="Оставьте пустым, если не нужно менять"
+                     mah:TextBoxHelper.ClearTextButton="True"
+                     Height="40" Margin="0,0,0,10"/>
+            <TextBlock Text="* При создании нового пользователя пароль обязателен." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" FontStyle="Italic"/>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,15,0" FontWeight="SemiBold"/>
+            <Button Content="СОХРАНИТЬ" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="150" IsEnabled="{Binding IsLoading, Converter={StaticResource BoolToVis}, ConverterParameter=Inverted}"/>
+        </StackPanel>
+        <Border Grid.RowSpan="3" Background="#99FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+            <mah:ProgressRing IsActive="True" Foreground="{StaticResource PrimaryBrush}"/>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

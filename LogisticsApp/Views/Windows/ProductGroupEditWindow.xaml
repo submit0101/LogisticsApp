@@ -1,0 +1,54 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.ProductGroupEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 Title="Товарная группа"
+                 Height="350" Width="450"
+                 WindowStartupLocation="CenterOwner"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1">
+
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="25" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="15">
+            <StackPanel>
+                <TextBlock Text="Наименование группы:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" mah:TextBoxHelper.Watermark="Например: Мясные полуфабрикаты" Margin="0,0,0,20"/>
+
+                <TextBlock Text="Описание / Примечание:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,10,0" FontWeight="SemiBold"/>
+                <Button Content="СОХРАНИТЬ" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="150"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.RowSpan="2" Background="#80FFFFFF" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+            <ProgressBar IsIndeterminate="True" Width="200" Height="6" BorderThickness="0" Foreground="{StaticResource PrimaryBrush}" Background="Transparent"/>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

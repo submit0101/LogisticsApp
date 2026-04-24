@@ -1,0 +1,325 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.LoginWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+                 mc:Ignorable="d"
+                 Title="Вход в систему"
+                 Height="600"
+                 Width="950"
+                 WindowStartupLocation="CenterScreen"
+                 ResizeMode="NoResize"
+                 WindowStyle="None"
+                 AllowsTransparency="True"
+                 BorderThickness="0"
+                 Background="Transparent"
+                 ShowTitleBar="False"
+                 Loaded="MetroWindow_Loaded">
+
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style TargetType="PasswordBox" x:Key="ModernPasswordBox">
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="Background" Value="#F9FAFB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="PasswordChar" Value="●"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter TargetName="border" Property="Background" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#D1D5DB"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="LoginTextBox">
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="Background" Value="#F9FAFB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <Grid>
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="0" Panel.ZIndex="1"/>
+                                <TextBlock x:Name="WaterMark" 
+                                           Text="{TemplateBinding mah:TextBoxHelper.Watermark}" 
+                                           Foreground="#9CA3AF" 
+                                           Margin="15,0,0,0" 
+                                           VerticalAlignment="Center" 
+                                           Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter TargetName="border" Property="Background" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#D1D5DB"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="">
+                                <Setter TargetName="WaterMark" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </mah:MetroWindow.Resources>
+
+    <Grid Background="Transparent">
+        <Border Margin="25" CornerRadius="24" Background="White">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="8" Opacity="0.2"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{StaticResource PrimaryBrush}" CornerRadius="24,0,0,24" ClipToBounds="True" MouseDown="Border_MouseDown">
+                    <Grid>
+                        <Ellipse Width="350" Height="350" Fill="#15FFFFFF" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-100,-100,0,0"/>
+                        <Ellipse Width="450" Height="450" Fill="#0AFFFFFF" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-150,-150"/>
+
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="30">
+
+                            <Border Background="White" Width="335" Height="194" CornerRadius="70" Margin="0,0,0,30">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="4" Opacity="0.15"/>
+                                </Border.Effect>
+                                <Image Source="/Assets/logo.jpg" Width="291" Height="170" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <TextBlock Text="ТД БРЯНСКИЙ" 
+                                       FontSize="34" 
+                                       FontWeight="Black" 
+                                       Foreground="White" 
+                                       TextAlignment="Center"
+                                       Margin="0,0,0,0"/>
+
+                            <TextBlock Text="МЯСОКОМБИНАТ" 
+                                       FontSize="34" 
+                                       FontWeight="Black" 
+                                       Foreground="White" 
+                                       TextAlignment="Center"
+                                       Margin="0,0,0,15"/>
+
+                            <Border Width="50" Height="4" Background="{StaticResource PrimaryLightBrush}" CornerRadius="2" Margin="0,0,0,15"/>
+
+                            <TextBlock Text="ЕДИНАЯ ERP-СИСТЕМА" 
+                                       FontSize="14" 
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource PrimaryLightBrush}" 
+                                       TextAlignment="Center"
+                                       Margin="0,0,0,5"/>
+
+                            <TextBlock Text="Логистика, склад и финансы" 
+                                       FontSize="13" 
+                                       Foreground="White" 
+                                       Opacity="0.8"
+                                       TextAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Background="White" CornerRadius="0,24,24,0" MouseDown="Border_MouseDown">
+                    <Grid>
+                        <Button HorizontalAlignment="Right" 
+                                VerticalAlignment="Top" 
+                                Margin="0,20,20,0" 
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Command="{Binding ExitCommand}"
+                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bg" Background="Transparent" CornerRadius="15" Padding="8">
+                                        <iconPacks:PackIconMaterial x:Name="icon" Kind="Close" Width="20" Height="20" Foreground="#9CA3AF"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background" Value="#F3F4F6"/>
+                                            <Setter TargetName="icon" Property="Foreground" Value="#111827"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <StackPanel VerticalAlignment="Center" Margin="50,0">
+                            <TextBlock Text="Авторизация" 
+                                       FontSize="32" 
+                                       FontWeight="Bold" 
+                                       Foreground="#111827" 
+                                       Margin="0,0,0,8"/>
+
+                            <TextBlock Text="Введите свои учетные данные для входа" 
+                                       FontSize="15" 
+                                       Foreground="#6B7280" 
+                                       Margin="0,0,0,40"/>
+
+                            <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,15" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <Trigger Property="Text" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <TextBlock Text="Имя пользователя" FontWeight="SemiBold" Foreground="#374151" Margin="0,0,0,8" FontSize="13"/>
+                            <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" 
+                                     mah:TextBoxHelper.Watermark="Введите логин"
+                                     Height="48"
+                                     Margin="0,0,0,20">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource LoginTextBox}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+
+                            <TextBlock Text="Пароль" FontWeight="SemiBold" Foreground="#374151" FontSize="13" Margin="0,0,0,8"/>
+                            <PasswordBox x:Name="TxtPassword"
+                                         Height="48"
+                                         Margin="0,0,0,20">
+                                <PasswordBox.Style>
+                                    <Style TargetType="PasswordBox" BasedOn="{StaticResource ModernPasswordBox}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </PasswordBox.Style>
+                            </PasswordBox>
+
+                            <CheckBox Content="Запомнить меня на этом устройстве" 
+                                      IsChecked="{Binding RememberMe}" 
+                                      Foreground="#4B5563" 
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,35">
+                                <CheckBox.Style>
+                                    <Style TargetType="CheckBox">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </CheckBox.Style>
+                            </CheckBox>
+
+                            <Grid>
+                                <Button Command="{Binding LoginCommand}" 
+                                        CommandParameter="{Binding ElementName=TxtPassword}"
+                                        Height="52"
+                                        Background="{StaticResource PrimaryBrush}"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                    <Setter Property="Visibility" Value="Hidden"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="10">
+                                                <TextBlock Text="ВОЙТИ В СИСТЕМУ" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="15"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="btnBorder" Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="btnBorder" Property="Opacity" Value="0.9"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter TargetName="btnBorder" Property="Background" Value="#E5E7EB"/>
+                                                    <Setter TargetName="btnBorder" Property="Opacity" Value="1"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <mah:MetroProgressBar IsIndeterminate="True"
+                                                          Foreground="{StaticResource PrimaryBrush}"
+                                                          Height="4" Width="150" Margin="0,0,0,15"/>
+                                    <TextBlock Text="Проверка учетных данных..."
+                                               Foreground="{StaticResource PrimaryBrush}"
+                                               FontWeight="SemiBold"
+                                               FontSize="13"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

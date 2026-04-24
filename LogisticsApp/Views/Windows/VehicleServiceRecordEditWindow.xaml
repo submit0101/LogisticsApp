@@ -1,0 +1,90 @@
+﻿<mah:MetroWindow x:Class="LogisticsApp.Views.Windows.VehicleServiceRecordEditWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                 xmlns:local="clr-namespace:LogisticsApp.Views.Windows"
+                 Title="Запись о сервисном обслуживании"
+                 Height="650" Width="550"
+                 WindowStartupLocation="CenterScreen"
+                 ResizeMode="NoResize"
+                 Background="{StaticResource BackgroundBrush}"
+                 GlowBrush="{StaticResource PrimaryBrush}"
+                 BorderThickness="1">
+
+    <mah:MetroWindow.Resources>
+        <local:VehicleServiceTypeToTextConverter x:Key="VehicleServiceTypeToTextConverter"/>
+
+        <ControlTemplate x:Key="BottomErrorTemplate">
+            <StackPanel>
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+                <TextBlock Text="{Binding [0].ErrorContent}" 
+                           Foreground="#D32F2F" FontSize="11" Margin="2,2,0,-18" FontStyle="Italic" TextWrapping="Wrap"/>
+            </StackPanel>
+        </ControlTemplate>
+
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MahApps.Styles.ComboBox}">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+        <Style TargetType="mah:NumericUpDown">
+            <Setter Property="Validation.ErrorTemplate" Value="{StaticResource BottomErrorTemplate}"/>
+        </Style>
+    </mah:MetroWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="25">
+                <TextBlock Text="Дата обслуживания:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <DatePicker SelectedDate="{Binding ServiceDate, ValidatesOnDataErrors=True}" Margin="0,0,0,25"/>
+
+                <TextBlock Text="Тип работ:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <ComboBox ItemsSource="{Binding AvailableServiceTypes}" SelectedItem="{Binding ServiceType, ValidatesOnDataErrors=True}" Margin="0,0,0,25">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource VehicleServiceTypeToTextConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Text="Исполнитель (СТО или Механик):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBox Text="{Binding MechanicName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,25"/>
+
+                <Grid Margin="0,0,0,25">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Пробег (км):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <mah:NumericUpDown Value="{Binding OdometerReading, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Minimum="0" Maximum="5000000"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Стоимость (руб):" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <mah:NumericUpDown Value="{Binding Cost, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Minimum="0" StringFormat="N2"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="Подробное описание / Замененные детали:" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                         Height="120" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="ОТМЕНА" Command="{Binding CancelCommand}" Style="{StaticResource MenuButton}" Margin="0,0,15,0" FontWeight="SemiBold"/>
+                <Button Content="СОХРАНИТЬ" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Width="150"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

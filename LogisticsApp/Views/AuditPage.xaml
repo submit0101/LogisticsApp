@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="LogisticsApp.Views.AuditPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1100">
+    <b:Interaction.Triggers>
+        <b:EventTrigger EventName="Loaded">
+            <b:InvokeCommandAction Command="{Binding LoadAuditCommand}" />
+        </b:EventTrigger>
+    </b:Interaction.Triggers>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" Padding="20" BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="0,0,25,0" VerticalAlignment="Center">
+                    <Border Width="40" Height="40" Background="{StaticResource PrimaryLightBrush}" CornerRadius="8">
+                        <iconPacks:PackIconMaterial Kind="History" Foreground="{StaticResource PrimaryDarkBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" Width="20" Height="20"/>
+                    </Border>
+                    <StackPanel Margin="15,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Журнал Аудита БД" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text="История изменений базы данных" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="2" Command="{Binding LoadAuditCommand}" Style="{StaticResource MenuButton}" ToolTip="Обновить" Height="40" Padding="15,0">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="Refresh" Width="16" Height="16" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0"/>
+                        <TextBlock Text="ОБНОВИТЬ" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}" Margin="0,15,0,0">
+            <Grid>
+                <DataGrid ItemsSource="{Binding AuditLogs}" AutoGenerateColumns="False" IsReadOnly="True" Margin="15" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Время" Binding="{Binding Timestamp, StringFormat=dd.MM.yyyy HH:mm:ss}" Width="150" Foreground="Gray" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="Действие" Binding="{Binding Action}" Width="100" FontWeight="Bold"/>
+                        <DataGridTextColumn Header="Пользователь" Binding="{Binding User.Login, TargetNullValue='Система'}" Width="150" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>
+                        <DataGridTextColumn Header="Сущность" Binding="{Binding EntityName}" Width="150"/>
+                        <DataGridTextColumn Header="Подробности" Binding="{Binding Details}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <ProgressBar IsIndeterminate="True" VerticalAlignment="Top" Height="4" BorderThickness="0" Foreground="{StaticResource PrimaryBrush}" Background="Transparent" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
