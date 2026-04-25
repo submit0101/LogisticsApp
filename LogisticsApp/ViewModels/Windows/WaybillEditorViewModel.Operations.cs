@@ -16,15 +16,8 @@ public sealed partial class WaybillEditorViewModel
         OnPropertyChanged(nameof(IsDraft));
         OnPropertyChanged(nameof(IsReady));
         OnPropertyChanged(nameof(IsInTransit));
-        OnPropertyChanged(nameof(IsEmergency));
         OnPropertyChanged(nameof(IsCompleted));
         OnPropertyChanged(nameof(IsEditable));
-    }
-
-    partial void OnHasIncidentChanged(bool value)
-    {
-        OnPropertyChanged(nameof(IsInTransit));
-        OnPropertyChanged(nameof(IsEmergency));
     }
 
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEditable));
@@ -102,63 +95,6 @@ public sealed partial class WaybillEditorViewModel
     }
 
     [RelayCommand]
-    private void OpenIncidentPanel() => IsReportingIncident = true;
-
-    [RelayCommand]
-    private void CancelIncident() => IsReportingIncident = false;
-
-    [RelayCommand]
-    private async Task RegisterIncidentAsync()
-    {
-        var prevHasIncident = HasIncident;
-        var prevIncidentType = IncidentType;
-        var prevIncidentDesc = IncidentDescription;
-        var prevDelay = DelayMinutes;
-        var prevIsReporting = IsReportingIncident;
-
-        HasIncident = true;
-        IncidentType = NewIncidentType;
-        IncidentDescription = NewIncidentDescription;
-        DelayMinutes += NewIncidentDelay;
-        IsReportingIncident = false;
-
-        CalculateMetrics();
-
-        bool success = await SaveInternalAsync(true, suppressSuccessNotification: true, closeWindow: false);
-        if (success)
-        {
-            await _dispatchService.LogIncidentAsync(_currentWaybill.WaybillID, IncidentType, IncidentDescription, NewIncidentDelay).ConfigureAwait(false);
-            _notify.Warning($"Зафиксировано ЧП! Время возвращения пересчитано: {ExpectedArrivalTime:HH:mm}");
-        }
-        else
-        {
-            HasIncident = prevHasIncident;
-            IncidentType = prevIncidentType;
-            IncidentDescription = prevIncidentDesc;
-            DelayMinutes = prevDelay;
-            IsReportingIncident = prevIsReporting;
-            CalculateMetrics();
-        }
-    }
-
-    [RelayCommand]
-    private async Task ResolveIncidentAsync()
-    {
-        var prevHasIncident = HasIncident;
-        HasIncident = false;
-
-        bool success = await SaveInternalAsync(true, suppressSuccessNotification: true, closeWindow: false);
-        if (success)
-        {
-            _notify.Success("Маршрут возобновлен. Статус ЧП снят.");
-        }
-        else
-        {
-            HasIncident = prevHasIncident;
-        }
-    }
-
-    [RelayCommand]
     private async Task FinishRouteAsync()
     {
         bool allPointsProcessed = Points.Count > 0 && Points.All(p => p.Status != WaybillPointStatus.Pending);
@@ -219,7 +155,6 @@ public sealed partial class WaybillEditorViewModel
                 _currentWaybill.IsPosted = false;
                 IsPosted = false;
                 Status = WaybillStatus.Draft;
-                HasIncident = false;
                 DepartureTime = null;
                 ExpectedArrivalTime = null;
                 _notify.Success("Проведение отменено. Метрики ТС и остатки восстановлены.");
@@ -311,10 +246,6 @@ public sealed partial class WaybillEditorViewModel
         _currentWaybill.DepartureTime = DepartureTime;
         _currentWaybill.ExpectedArrivalTime = ExpectedArrivalTime;
         _currentWaybill.ActualArrivalTime = ActualArrivalTime;
-        _currentWaybill.HasIncident = HasIncident;
-        _currentWaybill.IncidentType = IncidentType;
-        _currentWaybill.IncidentDescription = IncidentDescription;
-        _currentWaybill.DelayMinutes = DelayMinutes;
 
         _currentWaybill.Points = Points.Select(p => new WaybillPoint { WP_ID = p.WP_ID, OrderID = p.OrderID, SequenceNumber = p.SequenceNumber, Status = p.Status, DeliveredWeightKG = p.DeliveredWeightKG, Waybill = _currentWaybill }).ToList();
         _currentWaybill.FuelTickets = FuelTickets.Select(t => new FuelTicket { TicketID = t.TicketID, TicketDate = t.TicketDate, VolumeLiters = t.VolumeLiters, Amount = t.Amount, TicketNumber = t.TicketNumber, FuelType = t.FuelType, PricePerLiter = t.PricePerLiter, Waybill = _currentWaybill }).ToList();

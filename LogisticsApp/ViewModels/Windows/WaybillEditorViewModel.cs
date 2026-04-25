@@ -99,22 +99,10 @@ public sealed partial class WaybillEditorViewModel : ViewModelBase, IRecipient<S
     [ObservableProperty] private DateTime? _expectedArrivalTime;
     [ObservableProperty] private DateTime? _actualArrivalTime;
 
-    [ObservableProperty] private bool _hasIncident;
-    [ObservableProperty] private string? _incidentType;
-    [ObservableProperty] private string? _incidentDescription;
-    [ObservableProperty] private int _delayMinutes;
-
-    [ObservableProperty] private bool _isReportingIncident;
-    [ObservableProperty] private string _newIncidentType = "Поломка";
-    [ObservableProperty] private int _newIncidentDelay = 60;
-    [ObservableProperty] private string _newIncidentDescription = string.Empty;
-
-    public Array AvailableIncidentTypes => new[] { "Поломка", "ДТП", "Пробка", "Задержка на выгрузке", "Прочее" };
-
+    
     public bool IsDraft => Status == WaybillStatus.Draft;
     public bool IsReady => Status == WaybillStatus.Planned;
-    public bool IsInTransit => Status == WaybillStatus.Active && !HasIncident;
-    public bool IsEmergency => Status == WaybillStatus.Active && HasIncident;
+    public bool IsInTransit => Status == WaybillStatus.Active;// Больше не проверяет HasIncident
     public bool IsCompleted => Status == WaybillStatus.Completed || Status == WaybillStatus.Cancelled;
     public bool IsEditable => (IsDraft || IsReady) && !IsLoading && !IsPosted;
 
@@ -237,10 +225,6 @@ public sealed partial class WaybillEditorViewModel : ViewModelBase, IRecipient<S
                     DepartureTime = waybill.DepartureTime;
                     ExpectedArrivalTime = waybill.ExpectedArrivalTime;
                     ActualArrivalTime = waybill.ActualArrivalTime;
-                    HasIncident = waybill.HasIncident;
-                    IncidentType = waybill.IncidentType;
-                    IncidentDescription = waybill.IncidentDescription;
-                    DelayMinutes = waybill.DelayMinutes;
                 }
                 else
                 {

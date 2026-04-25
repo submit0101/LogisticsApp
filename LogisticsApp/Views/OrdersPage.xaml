@@ -69,7 +69,6 @@
                         <ComboBoxItem Content="В пути (InTransit)"/>
                         <ComboBoxItem Content="Доставлен (Delivered)"/>
                     </ComboBox>
-                    <!-- ФИЛЬТРЫ ДАТ ДЛЯ ВЫБОРКИ И ОТЧЕТА -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,15,10">
                         <TextBlock Text="С:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
                         <DatePicker SelectedDate="{Binding DateFromFilter}" Width="130" Height="38" mah:TextBoxHelper.Watermark="ДД.ММ.ГГГГ"/>
@@ -149,7 +148,6 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- ЛЕВАЯ ПАНЕЛЬ С КНОПКОЙ ОТЧЕТОВ -->
                 <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,15,0">
                     <mah:DropDownButton Content="ОТЧЕТЫ И ПЕЧАТЬ" 
                                         Margin="0,5,10,5"
@@ -174,7 +172,6 @@
                     </mah:DropDownButton>
                 </WrapPanel>
 
-                <!-- ПРАВАЯ ПАНЕЛЬ ДЕЙСТВИЙ -->
                 <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Button Command="{Binding DeleteCommand}" 
                             Visibility="{Binding Converter={StaticResource PermissionToVisibility}, ConverterParameter=DeleteOrders}"
@@ -189,6 +186,16 @@
                             Command="{Binding EditCommand}" 
                             Visibility="{Binding Converter={StaticResource PermissionToVisibility}, ConverterParameter=EditOrders}"
                             Style="{StaticResource MenuButton}" Margin="0,5,10,5"/>
+
+                    <Button Command="{Binding ImportExcelCommand}" 
+                            Visibility="{Binding Converter={StaticResource PermissionToVisibility}, ConverterParameter=EditOrders}"
+                            Style="{StaticResource MenuButton}" Margin="0,5,10,5">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="FileExcel" Foreground="#2E7D32" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="ИМПОРТ EXCEL" Foreground="#2E7D32" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
                     <Button Content="+ СОЗДАТЬ ЗАКАЗ" 
                             Command="{Binding AddCommand}" 
                             Visibility="{Binding Converter={StaticResource PermissionToVisibility}, ConverterParameter=EditOrders}"

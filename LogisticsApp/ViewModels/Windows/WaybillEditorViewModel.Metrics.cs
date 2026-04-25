@@ -78,7 +78,7 @@ public sealed partial class WaybillEditorViewModel
 
         double totalDriveTimeMinutes = RealDriveTimeMinutes > 0 ? RealDriveTimeMinutes : (TotalDistance / 60.0) * 60;
         int unloadingTimeMinutes = Points.Count * 30;
-        int totalExpectedMinutes = (int)Math.Round(totalDriveTimeMinutes) + unloadingTimeMinutes + DelayMinutes;
+        int totalExpectedMinutes = (int)Math.Round(totalDriveTimeMinutes) + unloadingTimeMinutes;
 
         ExpectedArrivalTime = baseTime.AddMinutes(totalExpectedMinutes);
 

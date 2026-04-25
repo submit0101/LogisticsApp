@@ -36,12 +36,8 @@ public class AuthService : IAuthService
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
 
-            // ИСПРАВЛЕНИЕ: Возвращена глубокая загрузка матрицы прав (RBAC)
             var user = await context.Users
-                .Include(u => u.Role)
-                    .ThenInclude(r => r!.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
-                .FirstOrDefaultAsync(u => u.Login == login);
+             .FirstOrDefaultAsync(u => u.Login == login);
 
             if (user == null)
             {

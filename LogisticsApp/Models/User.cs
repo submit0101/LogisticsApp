@@ -18,8 +18,6 @@ public class User
     [Required]
     public int RoleID { get; set; }
 
-    [ForeignKey("RoleID")]
-    public virtual Role? Role { get; set; }
 
     [MaxLength(100)]
     public string? FullName { get; set; }

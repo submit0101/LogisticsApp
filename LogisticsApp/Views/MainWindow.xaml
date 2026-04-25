@@ -23,9 +23,12 @@
             </Button>
         </mah:WindowCommands>
     </mah:MetroWindow.RightWindowCommands>
-
+    <mah:MetroWindow.InputBindings>
+        <KeyBinding Key="F1" Command="{Binding ShowHelpCommand}" />
+    </mah:MetroWindow.InputBindings>
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
         <DataTemplate DataType="{x:Type vm:HomeViewModel}">
             <views:HomePage />
         </DataTemplate>
@@ -37,9 +40,6 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:InventoryViewModel}">
             <views:InventoryPage />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:FinanceViewModel}">
-            <views:FinancePage />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:VehiclesViewModel}">
             <views:VehiclesPage />
@@ -64,9 +64,6 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:UsersViewModel}">
             <views:UsersPage />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:RolesViewModel}">
-            <views:RolesPage />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AuditViewModel}">
             <views:AuditPage />
@@ -119,13 +116,12 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Margin="20,30,20,15">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,30">
                         <Border Background="White" Width="38" Height="38" CornerRadius="8">
-                            <Image Source="/Assets/logo.png" Margin="5" RenderOptions.BitmapScalingMode="HighQuality">
+                            <Image Source="/Assets/logo.jpg" Margin="5" RenderOptions.BitmapScalingMode="HighQuality">
                                 <Image.Style>
                                     <Style TargetType="Image">
                                         <Style.Triggers>
@@ -139,25 +135,11 @@
                         </Border>
                         <TextBlock Text="ТД БРЯНСКИЙ&#x0a;МЯСОКОМБИНАТ" Foreground="White" FontSize="14" FontWeight="Bold" Margin="15,0,0,0" VerticalAlignment="Center" LineHeight="16"/>
                     </StackPanel>
-
-                    <Border Background="{StaticResource PrimaryDarkBrush}" CornerRadius="10" Padding="15">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <iconPacks:PackIconMaterial Kind="AccountCircle" Foreground="{StaticResource PrimaryLightBrush}" Width="32" Height="32" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding UserName}" Foreground="White" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Text="{Binding UserRole}" Foreground="{StaticResource PrimaryLightBrush}" FontSize="11"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
                 </StackPanel>
 
                 <Grid Grid.Row="1">
-                    <ScrollViewer x:Name="MenuScrollViewer" VerticalScrollBarVisibility="Hidden" Margin="0,0,0,0">
-                        <StackPanel Margin="0,0,0,60">
+                    <ScrollViewer x:Name="MenuScrollViewer" VerticalScrollBarVisibility="Hidden">
+                        <StackPanel Margin="0,0,0,30">
                             <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateHomeCommand}" IsChecked="True">
                                 <StackPanel Orientation="Horizontal">
                                     <iconPacks:PackIconMaterial Kind="Home" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
@@ -165,7 +147,7 @@
                                 </StackPanel>
                             </RadioButton>
 
-                            <StackPanel Visibility="{Binding CanViewOrdersOrWaybills, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
                                 <Grid Margin="20,15,20,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -188,7 +170,7 @@
                                 </RadioButton>
                             </StackPanel>
 
-                            <StackPanel Visibility="{Binding CanViewInventory, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
                                 <Grid Margin="20,15,20,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -205,24 +187,7 @@
                                 </RadioButton>
                             </StackPanel>
 
-                            <StackPanel Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
-                                <Grid Margin="20,15,20,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="ФИНАНСЫ И КАЗНАЧЕЙСТВО" Foreground="{StaticResource PrimaryLightBrush}" Opacity="0.7" FontSize="11" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <Border Grid.Column="1" Height="1" Background="{StaticResource PrimaryLightBrush}" Opacity="0.2" VerticalAlignment="Center"/>
-                                </Grid>
-                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateFinanceCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="CashRegister" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Взаиморасчеты" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </RadioButton>
-                            </StackPanel>
-
-                            <StackPanel Visibility="{Binding CanViewDictionaries, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
                                 <Grid Margin="20,15,20,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -231,7 +196,7 @@
                                     <TextBlock Text="БАЗА И СПРАВОЧНИКИ" Foreground="{StaticResource PrimaryLightBrush}" Opacity="0.7" FontSize="11" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                     <Border Grid.Column="1" Height="1" Background="{StaticResource PrimaryLightBrush}" Opacity="0.2" VerticalAlignment="Center"/>
                                 </Grid>
-                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateNomenclatureCommand}" Visibility="{Binding CanViewNomenclature, Converter={StaticResource BoolToVis}}">
+                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateNomenclatureCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="PackageVariant" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Номенклатура" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -257,7 +222,7 @@
                                 </RadioButton>
                             </StackPanel>
 
-                            <StackPanel Visibility="{Binding CanViewReports, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
                                 <Grid Margin="20,15,20,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -274,7 +239,7 @@
                                 </RadioButton>
                             </StackPanel>
 
-                            <StackPanel Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
                                 <Grid Margin="20,15,20,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -283,31 +248,19 @@
                                     <TextBlock Text="АДМИНИСТРИРОВАНИЕ" Foreground="{StaticResource PrimaryLightBrush}" Opacity="0.7" FontSize="11" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                     <Border Grid.Column="1" Height="1" Background="{StaticResource PrimaryLightBrush}" Opacity="0.2" VerticalAlignment="Center"/>
                                 </Grid>
-                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateUsersCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="AccountGroup" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Пользователи" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </RadioButton>
-                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateRolesCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <iconPacks:PackIconMaterial Kind="Security" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Управление ролями" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </RadioButton>
                                 <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateAuditCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="History" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Аудит БД" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </RadioButton>
-                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateArchiveCommand}" Visibility="{Binding CanAccessSettings, Converter={StaticResource BoolToVis}}">
+                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateArchiveCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="DeleteRestore" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Корзина (Архив)" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </RadioButton>
-                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateSettingsCommand}" Visibility="{Binding CanAccessSettings, Converter={StaticResource BoolToVis}}">
+                                <RadioButton Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateSettingsCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="Cog" Width="18" Height="18" Margin="0,0,15,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="Настройки системы" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -320,59 +273,16 @@
                                     </StackPanel>
                                 </RadioButton>
                             </StackPanel>
-
                         </StackPanel>
                     </ScrollViewer>
-
-                    <Border VerticalAlignment="Bottom" Height="80">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#00D32F2F" Offset="0"/>
-                                <GradientStop Color="#E6D32F2F" Offset="0.8"/>
-                                <GradientStop Color="#FFD32F2F" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <Button Command="ScrollBar.ScrollToEndCommand" CommandTarget="{Binding ElementName=MenuScrollViewer}" Cursor="Hand" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,15" Background="Transparent" BorderThickness="0">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}">
-                                        <ContentPresenter/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <StackPanel>
-                                <iconPacks:PackIconMaterial Kind="ChevronDoubleDown" Foreground="{StaticResource PrimaryLightBrush}" Opacity="0.8" Width="18" Height="18" HorizontalAlignment="Center">
-                                    <iconPacks:PackIconMaterial.Triggers>
-                                        <EventTrigger RoutedEvent="Loaded">
-                                            <BeginStoryboard>
-                                                <Storyboard RepeatBehavior="Forever">
-                                                    <ThicknessAnimation Storyboard.TargetProperty="Margin"
-                                                                        From="0,0,0,0" To="0,4,0,-4"
-                                                                        Duration="0:0:0.7" AutoReverse="True"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                    </iconPacks:PackIconMaterial.Triggers>
-                                </iconPacks:PackIconMaterial>
-                                <TextBlock Text="Листайте вниз" Foreground="{StaticResource PrimaryLightBrush}" Opacity="0.7" FontSize="10" FontWeight="SemiBold" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
                 </Grid>
-
-                <Button Grid.Row="2" Click="BtnLogout_Click" Background="Transparent" BorderThickness="0" Margin="0,15,0,25" Cursor="Hand" ToolTip="Сменить пользователя">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="Logout" Foreground="White" Opacity="0.8" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Выйти из системы" Foreground="White" Opacity="0.8" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
             </Grid>
         </Border>
 
         <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
 
         <Grid x:Name="OverlayGrid" Grid.ColumnSpan="2" Background="#80000000" Visibility="Collapsed" Panel.ZIndex="999">
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="12" Padding="35" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="12" Padding="35" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel>
                     <mah:ProgressRing IsActive="True" Foreground="{StaticResource PrimaryBrush}" Width="50" Height="50" Margin="0,0,0,20"/>
                     <TextBlock x:Name="OverlayText" Text="Пожалуйста, подождите..." FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextAlignment="Center"/>

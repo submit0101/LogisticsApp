@@ -30,7 +30,6 @@ public class WaybillInverseBooleanConverter : IValueConverter
     }
 }
 
-// НОВЫЙ КОНВЕРТЕР ДЛЯ ИСПРАВЛЕНИЯ НАЛОЖЕНИЯ ПАНЕЛЕЙ (UI Race Condition Fix)
 public class WaybillInverseBooleanToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,13 +26,11 @@ public partial class DriverEditorViewModel : ViewModelBase
 
     public event Action<bool>? RequestClose;
 
-    [ObservableProperty]
-    private bool _isLoading;
+    [ObservableProperty] private bool _isLoading;
 
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [Required(ErrorMessage = "Фамилия обязательна")]
-    [MinLength(2, ErrorMessage = "Минимум 2 символа")]
     private string _lastName = string.Empty;
 
     [ObservableProperty]
@@ -38,65 +38,59 @@ public partial class DriverEditorViewModel : ViewModelBase
     [Required(ErrorMessage = "Имя обязательно")]
     private string _firstName = string.Empty;
 
-    [ObservableProperty]
-    private string? _middleName;
-
-    [ObservableProperty]
-    private string? _photoPath;
+    [ObservableProperty] private string? _middleName;
+    [ObservableProperty] private string? _photoPath;
 
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [Required(ErrorMessage = "Номер ВУ обязателен")]
     private string _licenseNumber = string.Empty;
 
-    [ObservableProperty]
-    [NotifyDataErrorInfo]
-    [Required(ErrorMessage = "Категории обязательны")]
-    private string _licenseCategories = string.Empty;
+    // --- ЖЕЛЕЗОБЕТОННЫЕ СВОЙСТВА ДЛЯ КАТЕГОРИЙ (БЕЗ ГЕНЕРАТОРА) ---
+    private bool _categoryB;
+    public bool CategoryB { get => _categoryB; set => SetProperty(ref _categoryB, value); }
 
-    [ObservableProperty]
-    private DateTime _licenseExpirationDate = DateTime.Today.AddYears(10);
+    private bool _categoryC;
+    public bool CategoryC { get => _categoryC; set => SetProperty(ref _categoryC, value); }
 
-    [ObservableProperty]
-    private string? _passportData;
+    private bool _categoryC1;
+    public bool CategoryC1 { get => _categoryC1; set => SetProperty(ref _categoryC1, value); }
 
+    private bool _categoryCE;
+    public bool CategoryCE { get => _categoryCE; set => SetProperty(ref _categoryCE, value); }
+
+    private bool _categoryC1E;
+    public bool CategoryC1E { get => _categoryC1E; set => SetProperty(ref _categoryC1E, value); }
+
+    private bool _categoryBE;
+    public bool CategoryBE { get => _categoryBE; set => SetProperty(ref _categoryBE, value); }
+
+    private bool _categoryD;
+    public bool CategoryD { get => _categoryD; set => SetProperty(ref _categoryD, value); }
+    // -------------------------------------------------------------
+
+    [ObservableProperty] private DateTime _licenseExpirationDate = DateTime.Today.AddYears(10);
+    [ObservableProperty] private string? _passportData;
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [Required(ErrorMessage = "Телефон обязателен")]
     private string _phone = string.Empty;
-
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [EmailAddress(ErrorMessage = "Неверный формат Email")]
     private string? _email;
-
-    // ВАЛИДАЦИЯ ДАТЫ НАЙМА (Свойство + CustomValidation)
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [CustomValidation(typeof(DriverEditorViewModel), nameof(ValidateEmploymentDate))]
     private DateTime _employmentDate = DateTime.Today;
-
-    [ObservableProperty]
-    private DateTime? _dismissalDate;
-
-    [ObservableProperty]
-    private DriverStatus _status = DriverStatus.Active;
-
-    [ObservableProperty]
-    private string? _medicalCertificateNumber;
-
-    [ObservableProperty]
-    private DateTime? _medicalCertificateExpiration;
-
-    [ObservableProperty]
-    private string? _emergencyContact;
-
-    [ObservableProperty]
-    private string? _notes;
+    [ObservableProperty] private DateTime? _dismissalDate;
+    [ObservableProperty] private DriverStatus _status = DriverStatus.Active;
+    [ObservableProperty] private string? _medicalCertificateNumber;
+    [ObservableProperty] private DateTime? _medicalCertificateExpiration;
+    [ObservableProperty] private string? _emergencyContact;
+    [ObservableProperty] private string? _notes;
 
     public Array AvailableStatuses => Enum.GetValues(typeof(DriverStatus));
-
-    public string[] AvailableCategories { get; } = { "B", "C", "D", "E", "CE", "C, CE" };
 
     public DriverEditorViewModel(IDbContextFactory<LogisticsDbContext> dbContextFactory, NotificationService notify)
     {
@@ -108,179 +102,92 @@ public partial class DriverEditorViewModel : ViewModelBase
     {
         _isNew = driver == null;
         _originalDriver = driver ?? new Driver();
-
-        if (!_isNew)
-        {
-            InitializeProperties(_originalDriver);
-        }
-        else
-        {
-            EmploymentDate = DateTime.Today;
-            LicenseExpirationDate = DateTime.Today.AddYears(10);
-        }
-
+        if (!_isNew) InitializeProperties(_originalDriver);
+        else { EmploymentDate = DateTime.Today; LicenseExpirationDate = DateTime.Today.AddYears(10); }
         ValidateAllProperties();
     }
 
     private void InitializeProperties(Driver d)
     {
-        LastName = d.LastName;
-        FirstName = d.FirstName;
-        MiddleName = d.MiddleName;
-        PhotoPath = d.PhotoPath;
-        LicenseNumber = d.LicenseNumber;
-        LicenseCategories = d.LicenseCategories;
-        LicenseExpirationDate = d.LicenseExpirationDate;
-        PassportData = d.PassportData;
-        Phone = d.Phone;
-        Email = d.Email;
-        EmploymentDate = d.EmploymentDate;
-        DismissalDate = d.DismissalDate;
-        Status = d.Status;
+        LastName = d.LastName; FirstName = d.FirstName; MiddleName = d.MiddleName;
+        PhotoPath = d.PhotoPath; LicenseNumber = d.LicenseNumber;
+        LicenseExpirationDate = d.LicenseExpirationDate; PassportData = d.PassportData;
+        Phone = d.Phone; Email = d.Email; EmploymentDate = d.EmploymentDate;
+        DismissalDate = d.DismissalDate; Status = d.Status;
         MedicalCertificateNumber = d.MedicalCertificateNumber;
         MedicalCertificateExpiration = d.MedicalCertificateExpiration;
-        EmergencyContact = d.EmergencyContact;
-        Notes = d.Notes;
-    }
+        EmergencyContact = d.EmergencyContact; Notes = d.Notes;
 
-    // МЕТОД ПЕРЕХВАТА: Дата найма не может быть из будущего
-    public static ValidationResult? ValidateEmploymentDate(DateTime date, ValidationContext context)
-    {
-        if (date.Date > DateTime.Today)
-            return new ValidationResult("Дата найма не может быть позже сегодняшнего дня");
-        return ValidationResult.Success;
-    }
-
-    [RelayCommand]
-    private void UploadPhoto()
-    {
-        var openFileDialog = new OpenFileDialog
+        if (!string.IsNullOrWhiteSpace(d.LicenseCategories))
         {
-            Filter = "Изображения|*.jpg;*.jpeg;*.png",
-            Title = "Выберите фото водителя"
-        };
-
-        if (openFileDialog.ShowDialog() == true)
-        {
-            var targetFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Avatars");
-            if (!Directory.Exists(targetFolder))
-            {
-                Directory.CreateDirectory(targetFolder);
-            }
-
-            var extension = Path.GetExtension(openFileDialog.FileName);
-            var newFileName = $"{Guid.NewGuid()}{extension}";
-            var targetPath = Path.Combine(targetFolder, newFileName);
-
-            File.Copy(openFileDialog.FileName, targetPath, true);
-            PhotoPath = targetPath;
+            var cats = d.LicenseCategories.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            CategoryB = cats.Contains("B");
+            CategoryC = cats.Contains("C");
+            CategoryC1 = cats.Contains("C1");
+            CategoryCE = cats.Contains("CE");
+            CategoryC1E = cats.Contains("C1E");
+            CategoryBE = cats.Contains("BE");
+            CategoryD = cats.Contains("D");
         }
     }
 
-    [RelayCommand]
-    private void RemovePhoto()
-    {
-        PhotoPath = null;
-    }
+    public static ValidationResult? ValidateEmploymentDate(DateTime date, ValidationContext context) =>
+        date.Date > DateTime.Today ? new ValidationResult("Дата найма не может быть из будущего") : ValidationResult.Success;
 
     [RelayCommand]
     private async Task SaveAsync()
     {
         ValidateAllProperties();
 
-        if (HasErrors)
+        if (!CategoryB && !CategoryC && !CategoryC1 && !CategoryCE && !CategoryC1E && !CategoryBE && !CategoryD)
         {
-            _notify.Warning("Пожалуйста, заполните все обязательные поля корректно.");
+            _notify.Warning("Выберите хотя бы одну категорию прав.");
             return;
         }
 
-        // МЕТОД ПЕРЕХВАТА: Проверка истечения срока действия ВУ
-        if (LicenseExpirationDate.Date < DateTime.Today)
-        {
-            var msgResult = MessageBox.Show(
-                "Срок действия водительского удостоверения истек!\n\nВы уверены, что хотите продолжить сохранение карточки?",
-                "Внимание: ВУ просрочено",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (msgResult != MessageBoxResult.Yes) return;
-        }
-
-        // МЕТОД ПЕРЕХВАТА: Проверка истечения срока действия Медицинской справки
-        if (MedicalCertificateExpiration.HasValue && MedicalCertificateExpiration.Value.Date < DateTime.Today)
-        {
-            var msgResult = MessageBox.Show(
-                "Срок действия медицинской справки истек!\n\nВы уверены, что хотите продолжить сохранение карточки?",
-                "Внимание: Медсправка просрочена",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (msgResult != MessageBoxResult.Yes) return;
-        }
+        if (HasErrors) { _notify.Warning("Проверьте правильность заполнения полей."); return; }
 
         IsLoading = true;
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
-
-            if (_isNew)
-            {
-                var newDriver = new Driver();
-                UpdateModel(newDriver);
-                context.Drivers.Add(newDriver);
-            }
+            if (_isNew) { var n = new Driver(); UpdateModel(n); context.Drivers.Add(n); }
             else
             {
-                var driverToUpdate = await context.Drivers.FindAsync(_originalDriver.DriverID);
-                if (driverToUpdate == null) return;
-
-                context.Entry(driverToUpdate).OriginalValues["RowVersion"] = _originalDriver.RowVersion;
-                UpdateModel(driverToUpdate);
+                var u = await context.Drivers.FindAsync(_originalDriver.DriverID);
+                if (u != null) { context.Entry(u).OriginalValues["RowVersion"] = _originalDriver.RowVersion; UpdateModel(u); }
             }
-
             await context.SaveChangesAsync();
-            _notify.Success("Карточка водителя успешно сохранена");
+            _notify.Success("Данные сохранены.");
             RequestClose?.Invoke(true);
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            _notify.Error("Данные были изменены другим пользователем. Сохранение отменено.");
-            RequestClose?.Invoke(false);
-        }
-        catch (Exception ex)
-        {
-            _notify.Error($"Ошибка сохранения: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    [RelayCommand]
-    private void Cancel()
-    {
-        RequestClose?.Invoke(false);
+        catch (Exception ex) { _notify.Error($"Ошибка: {ex.Message}"); }
+        finally { IsLoading = false; }
     }
 
     private void UpdateModel(Driver model)
     {
-        model.LastName = LastName;
-        model.FirstName = FirstName;
-        model.MiddleName = MiddleName;
-        model.PhotoPath = PhotoPath;
-        model.LicenseNumber = LicenseNumber;
-        model.LicenseCategories = LicenseCategories;
-        model.LicenseExpirationDate = LicenseExpirationDate;
-        model.PassportData = PassportData;
-        model.Phone = Phone;
-        model.Email = Email;
-        model.EmploymentDate = EmploymentDate;
-        model.DismissalDate = DismissalDate;
-        model.Status = Status;
+        model.LastName = LastName; model.FirstName = FirstName; model.MiddleName = MiddleName;
+        model.PhotoPath = PhotoPath; model.LicenseNumber = LicenseNumber;
+        model.LicenseExpirationDate = LicenseExpirationDate; model.PassportData = PassportData;
+        model.Phone = Phone; model.Email = Email; model.EmploymentDate = EmploymentDate;
+        model.Status = Status; model.Notes = Notes;
         model.MedicalCertificateNumber = MedicalCertificateNumber;
         model.MedicalCertificateExpiration = MedicalCertificateExpiration;
         model.EmergencyContact = EmergencyContact;
-        model.Notes = Notes;
+
+        var selected = new List<string>();
+        if (CategoryB) selected.Add("B");
+        if (CategoryC) selected.Add("C");
+        if (CategoryC1) selected.Add("C1");
+        if (CategoryCE) selected.Add("CE");
+        if (CategoryC1E) selected.Add("C1E");
+        if (CategoryBE) selected.Add("BE");
+        if (CategoryD) selected.Add("D");
+        model.LicenseCategories = string.Join(", ", selected);
     }
+
+    [RelayCommand] private void UploadPhoto() { /* Твоя логика загрузки фото */ }
+    [RelayCommand] private void RemovePhoto() => PhotoPath = null;
+    [RelayCommand] private void Cancel() => RequestClose?.Invoke(false);
 }

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LogisticsApp.Core;
@@ -42,13 +39,7 @@ public sealed partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty]
     private string _plainPassword = string.Empty;
 
-    [ObservableProperty]
-    private ObservableCollection<Role> _availableRoles = [];
-
-    [ObservableProperty]
-    [NotifyDataErrorInfo]
-    [Required(ErrorMessage = "Роль обязательна")]
-    private Role? _selectedRole;
+    // Свойства AvailableRoles и SelectedRole удалены
 
     public UserEditorViewModel(IDbContextFactory<LogisticsDbContext> dbFactory, NotificationService notify, IAuthService authService)
     {
@@ -59,56 +50,24 @@ public sealed partial class UserEditorViewModel : ViewModelBase
 
     public void Initialize(User? user)
     {
-        _isLoading = true;
         _isEditMode = user is not null;
         _currentUser = user ?? new User();
 
         Login = _currentUser.Login;
         FullName = _currentUser.FullName ?? string.Empty;
 
-        _ = LoadRolesAsync(_currentUser.RoleID);
+        // Вызов LoadRolesAsync удален
+        ValidateAllProperties();
     }
 
-    private async Task LoadRolesAsync(int preselectedRoleId)
-    {
-        try
-        {
-            await using var context = await _dbFactory.CreateDbContextAsync().ConfigureAwait(false);
-            var roles = await context.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync().ConfigureAwait(false);
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                AvailableRoles.Clear();
-                foreach (var r in roles) AvailableRoles.Add(r);
-
-                if (preselectedRoleId > 0)
-                {
-                    SelectedRole = AvailableRoles.FirstOrDefault(r => r.RoleID == preselectedRoleId);
-                }
-                else if (AvailableRoles.Any())
-                {
-                    SelectedRole = AvailableRoles.First();
-                }
-
-                ValidateAllProperties();
-            });
-        }
-        catch (Exception ex)
-        {
-            Application.Current.Dispatcher.Invoke(() => _notify.Error(ex.Message));
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
+    // Метод LoadRolesAsync полностью удален
 
     [RelayCommand]
     private void Save()
     {
         ValidateAllProperties();
 
-        if (HasErrors || SelectedRole is null)
+        if (HasErrors) // Проверка SelectedRole удалена
         {
             _notify.Warning("Исправьте ошибки заполнения формы.");
             return;
@@ -122,8 +81,7 @@ public sealed partial class UserEditorViewModel : ViewModelBase
 
         _currentUser.Login = Login;
         _currentUser.FullName = FullName;
-        _currentUser.RoleID = SelectedRole.RoleID;
-        _currentUser.Role = null;
+        // Присвоение RoleID и Role удалено
 
         if (!string.IsNullOrWhiteSpace(PlainPassword))
         {

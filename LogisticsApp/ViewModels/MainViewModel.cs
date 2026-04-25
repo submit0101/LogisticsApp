@@ -19,16 +19,20 @@ public sealed partial class MainViewModel : ViewModelBase
     private object _currentView;
 
     public string UserName { get; }
-    public string UserRole { get; }
-    public bool IsAdmin { get; }
 
-    public bool CanViewReports => _security.HasPermission(AppPermission.ViewReports);
-    public bool CanAccessSettings => _security.HasPermission(AppPermission.AccessSettings);
-    public bool CanViewOrdersOrWaybills => _security.HasPermission(AppPermission.ViewOrders) || _security.HasPermission(AppPermission.ViewWaybills);
-    public bool CanViewDictionaries => _security.HasPermission(AppPermission.ViewCustomers) || _security.HasPermission(AppPermission.ViewVehicles) || _security.HasPermission(AppPermission.ViewDrivers) || _security.HasPermission(AppPermission.ViewNomenclature);
-    public bool CanViewInventory => _security.HasPermission(AppPermission.ViewInventory);
-    public bool CanViewFinance => _security.HasPermission(AppPermission.ViewFinance);
-    public bool CanViewNomenclature => _security.HasPermission(AppPermission.ViewNomenclature);
+    // Свойства UserRole и IsAdmin удалены, так как ролей больше нет
+
+    // Все свойства CanView... удалены. 
+    // Теперь в XAML разметке нужно либо удалить привязки к ним, 
+    // либо оставить их возвращающими всегда true (для совместимости).
+    public bool CanViewReports => true;
+    public bool CanAccessSettings => true;
+    public bool CanViewOrdersOrWaybills => true;
+    public bool CanViewDictionaries => true;
+    public bool CanViewInventory => true;
+    public bool CanViewFinance => true;
+    public bool CanViewNomenclature => true;
+    public bool IsAdmin => true;
 
     public MainViewModel(User user, IServiceProvider sp)
     {
@@ -37,28 +41,31 @@ public sealed partial class MainViewModel : ViewModelBase
         _helpService = _sp.GetRequiredService<IHelpService>();
 
         UserName = user.FullName ?? user.Login;
-        UserRole = user.Role?.Name ?? string.Empty;
-        IsAdmin = user.Role?.Name == "Администратор" || user.Role?.IsSystem == true;
 
+        // Инициализация UserRole и IsAdmin удалена
         _currentView = _sp.GetRequiredService<HomeViewModel>();
     }
 
     [RelayCommand] private void NavigateHome() => CurrentView = _sp.GetRequiredService<HomeViewModel>();
     [RelayCommand] private void NavigateOrders() => CurrentView = _sp.GetRequiredService<OrdersViewModel>();
     [RelayCommand] private void NavigateWaybills() => CurrentView = _sp.GetRequiredService<WaybillsViewModel>();
-    [RelayCommand(CanExecute = nameof(CanViewInventory))] private void NavigateInventory() => CurrentView = _sp.GetRequiredService<InventoryViewModel>();
-    [RelayCommand(CanExecute = nameof(CanViewFinance))] private void NavigateFinance() => CurrentView = _sp.GetRequiredService<FinanceViewModel>();
-    [RelayCommand(CanExecute = nameof(CanViewNomenclature))] private void NavigateNomenclature() => CurrentView = _sp.GetRequiredService<NomenclatureViewModel>();
+
+    // У всех команд ниже удален параметр CanExecute
+    [RelayCommand] private void NavigateInventory() => CurrentView = _sp.GetRequiredService<InventoryViewModel>();
+    [RelayCommand] private void NavigateFinance() => CurrentView = _sp.GetRequiredService<FinanceViewModel>();
+    [RelayCommand] private void NavigateNomenclature() => CurrentView = _sp.GetRequiredService<NomenclatureViewModel>();
     [RelayCommand] private void NavigateCustomers() => CurrentView = _sp.GetRequiredService<CustomersViewModel>();
     [RelayCommand] private void NavigateVehicles() => CurrentView = _sp.GetRequiredService<VehiclesViewModel>();
     [RelayCommand] private void NavigateDrivers() => CurrentView = _sp.GetRequiredService<DriversViewModel>();
-    [RelayCommand(CanExecute = nameof(CanViewReports))] private void NavigateReports() => CurrentView = _sp.GetRequiredService<ReportsViewModel>();
-    [RelayCommand(CanExecute = nameof(IsAdmin))] private void NavigateUsers() => CurrentView = _sp.GetRequiredService<UsersViewModel>();
-    [RelayCommand(CanExecute = nameof(IsAdmin))] private void NavigateRoles() => CurrentView = _sp.GetRequiredService<RolesViewModel>();
-    [RelayCommand(CanExecute = nameof(IsAdmin))] private void NavigateAudit() => CurrentView = _sp.GetRequiredService<AuditViewModel>();
-    [RelayCommand(CanExecute = nameof(CanAccessSettings))] private void NavigateArchive() => CurrentView = _sp.GetRequiredService<ArchiveViewModel>();
-    [RelayCommand(CanExecute = nameof(CanAccessSettings))] private void NavigateSettings() => CurrentView = _sp.GetRequiredService<SettingsViewModel>();
-    [RelayCommand(CanExecute = nameof(IsAdmin))] private void NavigateLogs() => CurrentView = _sp.GetRequiredService<LogViewerViewModel>();
+    [RelayCommand] private void NavigateReports() => CurrentView = _sp.GetRequiredService<ReportsViewModel>();
+    [RelayCommand] private void NavigateUsers() => CurrentView = _sp.GetRequiredService<UsersViewModel>();
+
+    // Команда NavigateRoles удалена полностью
+
+    [RelayCommand] private void NavigateAudit() => CurrentView = _sp.GetRequiredService<AuditViewModel>();
+    [RelayCommand] private void NavigateArchive() => CurrentView = _sp.GetRequiredService<ArchiveViewModel>();
+    [RelayCommand] private void NavigateSettings() => CurrentView = _sp.GetRequiredService<SettingsViewModel>();
+    [RelayCommand] private void NavigateLogs() => CurrentView = _sp.GetRequiredService<LogViewerViewModel>();
 
     [RelayCommand]
     private void ShowHelp()

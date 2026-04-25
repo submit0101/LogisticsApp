@@ -59,7 +59,6 @@ public partial class WaybillsViewModel : ViewModelBase
         _waybillDocumentService = waybillDocumentService;
         BindingOperations.EnableCollectionSynchronization(Waybills, _waybillsLock);
 
-        // Автоматически загружаем данные при первом создании (Singleton)
         _ = LoadDataAsync();
     }
 
@@ -94,14 +93,16 @@ public partial class WaybillsViewModel : ViewModelBase
                 });
             }
             var query = context.Waybills.AsNoTracking().AsQueryable();
-            if (!string.IsNullOrWhiteSpace(HighlightText))
-            {
-                var search = HighlightText.ToLower();
-                query = query.Where(w =>
-                    (w.Vehicle != null && w.Vehicle.RegNumber.ToLower().Contains(search)) ||
-                    (w.Driver != null && w.Driver.LastName.ToLower().Contains(search)) ||
-                    w.WaybillID.ToString() == search);
-            }
+
+            // if (!string.IsNullOrWhiteSpace(HighlightText))
+            // {
+            //     var search = HighlightText.ToLower();
+            //     query = query.Where(w =>
+            //         (w.Vehicle != null && w.Vehicle.RegNumber.ToLower().Contains(search)) ||
+            //         (w.Driver != null && w.Driver.LastName.ToLower().Contains(search)) ||
+            //         w.WaybillID.ToString() == search);
+            // }
+
             switch (SelectedFilterIndex)
             {
                 case 1: query = query.Where(w => w.Status == WaybillStatus.Draft); break;
@@ -154,13 +155,15 @@ public partial class WaybillsViewModel : ViewModelBase
         }
     }
 
-    partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
+
+
     partial void OnSelectedFilterIndexChanged(int value) => _ = LoadDataAsync();
     partial void OnSelectedVehicleFilterChanged(Vehicle? value) => _ = LoadDataAsync();
     partial void OnSelectedDriverFilterChanged(Driver? value) => _ = LoadDataAsync();
     partial void OnDateFromFilterChanged(DateTime? value) => _ = LoadDataAsync();
     partial void OnDateToFilterChanged(DateTime? value) => _ = LoadDataAsync();
 
+    
     [RelayCommand(CanExecute = nameof(CanAdd))]
     private void Add()
     {
@@ -350,20 +353,11 @@ public partial class WaybillsViewModel : ViewModelBase
 
             if (waybill != null)
             {
-                string directorName = "Иванов И.И.";
 
-                var accountants = await context.Users
-                    .Include(u => u.Role)
-                    .Where(u => u.Role != null && u.Role.Name == "Бухгалтер" && !string.IsNullOrEmpty(u.FullName))
-                    .Select(u => u.FullName)
-                    .ToListAsync();
-
-                string chiefAccountant = "Петрова П.П.";
-                if (accountants.Any())
-                {
-                    var random = new Random();
-                    chiefAccountant = accountants[random.Next(accountants.Count)]!;
-                }
+                var allUserNames = await context.Users
+               .Where(u => !string.IsNullOrEmpty(u.FullName))
+               .Select(u => u.FullName)
+               .ToListAsync();
 
                 var dto = new DriverDocumentDto
                 {
@@ -373,8 +367,6 @@ public partial class WaybillsViewModel : ViewModelBase
                     VehicleRegistrationNumber = waybill.Vehicle?.RegNumber ?? string.Empty,
                     VehicleModel = waybill.Vehicle?.Model ?? string.Empty,
                     RouteName = "Доставка клиентам",
-                    ManagerName = directorName,
-                    ChiefAccountantName = chiefAccountant,
                     Items = waybill.Points.SelectMany(p => p.Order?.Items ?? Enumerable.Empty<OrderItem>())
                         .GroupBy(i => i.Product)
                         .Select((g, index) => new DriverDocumentItemDto

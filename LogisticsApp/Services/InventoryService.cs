@@ -119,7 +119,8 @@ public sealed class InventoryService
 
             if (targetOrder.Priority > OrderPriority.Low && needed > 0)
             {
-                var lowerPriorityReserves = await context.InventoryTransactions
+                // ИСПРАВЛЕНИЕ: Выгружаем данные из БД в память перед группировкой
+                var rawTransactions = await context.InventoryTransactions
                     .Include(t => t.Order)
                     .Where(t => t.ProductID == item.ProductID &&
                                 t.IsReserve &&
@@ -129,6 +130,10 @@ public sealed class InventoryService
                                 t.Order.Priority < targetOrder.Priority &&
                                 t.Order.Status != "InTransit" &&
                                 t.Order.Status != "Delivered")
+                    .ToListAsync().ConfigureAwait(false);
+
+                // ИСПРАВЛЕНИЕ: Выполняем группировку локально
+                var lowerPriorityReserves = rawTransactions
                     .GroupBy(t => t.OrderID)
                     .Select(g => new
                     {
@@ -139,7 +144,7 @@ public sealed class InventoryService
                     .Where(x => x.ReservedAmount > 0)
                     .OrderBy(x => x.Order!.Priority)
                     .ThenByDescending(x => x.Order!.OrderDate)
-                    .ToListAsync().ConfigureAwait(false);
+                    .ToList();
 
                 foreach (var reserve in lowerPriorityReserves)
                 {

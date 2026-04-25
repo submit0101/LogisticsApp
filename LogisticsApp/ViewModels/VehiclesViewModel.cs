@@ -107,14 +107,14 @@ public partial class VehiclesViewModel : ViewModelBase
                 .AsSplitQuery()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(HighlightText))
-            {
-                var search = HighlightText.ToLower();
-                query = query.Where(v =>
-                    v.RegNumber.ToLower().Contains(search) ||
-                    v.Model.ToLower().Contains(search) ||
-                    v.VIN.ToLower().Contains(search));
-            }
+            //if (!string.IsNullOrWhiteSpace(HighlightText))
+            //{
+            //    var search = HighlightText.ToLower();
+            //    query = query.Where(v =>
+            //        v.RegNumber.ToLower().Contains(search) ||
+            //        v.Model.ToLower().Contains(search) ||
+            //        v.VIN.ToLower().Contains(search));
+            //}
 
             if (SelectedStatusFilter.HasValue)
             {
@@ -147,7 +147,7 @@ public partial class VehiclesViewModel : ViewModelBase
         }
     }
 
-    partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
+    //partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
     partial void OnSelectedStatusFilterChanged(VehicleStatus? value) => _ = LoadDataAsync();
 
     [RelayCommand(CanExecute = nameof(CanAdd))]

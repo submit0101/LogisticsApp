@@ -8,9 +8,6 @@ namespace LogisticsApp.Data;
 
 public class LogisticsDbContext : DbContext
 {
-    public DbSet<Role> Roles { get; set; }
-    public DbSet<Permission> Permissions { get; set; }
-    public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<Driver> Drivers { get; set; }
@@ -73,11 +70,6 @@ public class LogisticsDbContext : DbContext
             .WithMany()
             .HasForeignKey(o => o.WarehouseID)
             .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<RolePermission>().HasKey(rp => new { rp.RoleID, rp.PermissionID });
-        modelBuilder.Entity<RolePermission>().HasOne(rp => rp.Role).WithMany(r => r.RolePermissions).HasForeignKey(rp => rp.RoleID).OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<RolePermission>().HasOne(rp => rp.Permission).WithMany(p => p.RolePermissions).HasForeignKey(rp => rp.PermissionID).OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<Customer>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Driver>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Order>().HasQueryFilter(e => !e.IsDeleted);

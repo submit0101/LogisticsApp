@@ -48,11 +48,7 @@ public partial class App : Application
                 services.AddSingleton<FuelPriceService>();
                 services.AddSingleton<TripValidationService>();
                 services.AddSingleton<WaybillDispatchService>();
-                services.AddSingleton<TripValidationService>();
-                services.AddSingleton<WaybillDispatchService>();
                 services.AddSingleton<RouteCalculationService>();
-                services.AddHostedService<AuditLogBackgroundService>();
-
                 services.AddHostedService<AuditLogBackgroundService>();
                 services.AddHostedService<ArchiveCleanupBackgroundService>();
 
@@ -78,7 +74,6 @@ public partial class App : Application
                 services.AddHttpClient("FuelApiClient").AddPolicyHandler(retryPolicy);
 
                 services.AddTransient<IAuthService, AuthService>();
-
                 services.AddTransient<IWaybillDocumentService, WaybillDocumentService>();
                 services.AddTransient<IOrderReportService, OrderReportService>();
                 services.AddTransient<ILogisticsAnalyticsReportService, LogisticsAnalyticsReportService>();
@@ -105,7 +100,6 @@ public partial class App : Application
                 services.AddSingleton<LogViewerViewModel>();
                 services.AddSingleton<SettingsViewModel>();
                 services.AddSingleton<UsersViewModel>();
-                services.AddSingleton<RolesViewModel>();
                 services.AddSingleton<AuditViewModel>();
                 services.AddSingleton<ArchiveViewModel>();
                 services.AddSingleton<NomenclatureViewModel>();
@@ -113,7 +107,6 @@ public partial class App : Application
                 services.AddSingleton<FinanceViewModel>();
 
                 services.AddTransient<LoginViewModel>();
-
                 services.AddTransient<CustomerEditorViewModel>();
                 services.AddTransient<VehicleEditorViewModel>();
                 services.AddTransient<DriverEditorViewModel>();
@@ -197,27 +190,22 @@ public partial class App : Application
                 await DatabaseInitializer.InitializeAsync(context);
             }
 
-            var authService = AppHost.Services.GetRequiredService<IAuthService>();
+            // --- ОБХОД АВТОРИЗАЦИИ ---
             var securityService = AppHost.Services.GetRequiredService<SecurityService>();
 
-            if (authService.LoadCredentials(out string savedUser, out string savedPass))
+            // Принудительно устанавливаем текущего пользователя
+            securityService.Initialize(new Models.User
             {
-                var user = await authService.AuthenticateAsync(savedUser, savedPass);
-                if (user != null)
-                {
-                    securityService.Initialize(user);
-                    var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                    mainWindow.Show();
-                    return;
-                }
-                else
-                {
-                    authService.ClearCredentials();
-                }
-            }
+                UserID = 1,
+                Login = "admin",
+                FullName = "Администратор",
+                RoleID = 1
+            });
 
-            var loginWindow = AppHost.Services.GetRequiredService<LogisticsApp.Views.Windows.LoginWindow>();
-            loginWindow.Show();
+            // Сразу открываем главное окно
+            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+            mainWindow.Show();
+            // --------------------------
         }
         catch (Exception ex)
         {
@@ -229,8 +217,11 @@ public partial class App : Application
 
     protected override async void OnExit(ExitEventArgs e)
     {
-        await AppHost!.StopAsync();
-        AppHost.Dispose();
+        if (AppHost != null)
+        {
+            await AppHost.StopAsync();
+            AppHost.Dispose();
+        }
         await Log.CloseAndFlushAsync();
         base.OnExit(e);
     }

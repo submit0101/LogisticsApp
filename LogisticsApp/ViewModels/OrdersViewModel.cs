@@ -15,6 +15,7 @@ using LogisticsApp.Models.Enums;
 using LogisticsApp.Services;
 using LogisticsApp.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 
 namespace LogisticsApp.ViewModels;
 
@@ -25,6 +26,7 @@ public partial class OrdersViewModel : ViewModelBase
     private readonly SecurityService _security;
     private readonly IDialogService _dialogService;
     private readonly IOrderReportService _orderReportService;
+    private readonly ExcelImportService _importService;
     private readonly object _ordersLock = new();
 
     public ObservableCollection<OrderListDto> Orders { get; } = new();
@@ -42,18 +44,66 @@ public partial class OrdersViewModel : ViewModelBase
     [ObservableProperty] private DateTime? _dateFromFilter;
     [ObservableProperty] private DateTime? _dateToFilter;
 
-    public OrdersViewModel(IDbContextFactory<LogisticsDbContext> dbContextFactory, NotificationService notify, SecurityService security, IDialogService dialogService, IOrderReportService orderReportService)
+    public OrdersViewModel(
+        IDbContextFactory<LogisticsDbContext> dbContextFactory,
+        NotificationService notify,
+        SecurityService security,
+        IDialogService dialogService,
+        IOrderReportService orderReportService,
+        ExcelImportService importService)
     {
         _dbContextFactory = dbContextFactory;
         _notify = notify;
         _security = security;
         _dialogService = dialogService;
         _orderReportService = orderReportService;
+        _importService = importService;
 
         BindingOperations.EnableCollectionSynchronization(Orders, _ordersLock);
-
-        // Автоматически загружаем данные при первом создании (Singleton)
         _ = LoadDataAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAdd))]
+    private async Task ImportExcelAsync()
+    {
+        var openFileDialog = new OpenFileDialog { Filter = "Excel Files|*.xlsx;*.xls" };
+        if (openFileDialog.ShowDialog() != true) return;
+
+        string filePath = openFileDialog.FileName;
+        IsLoading = true;
+
+        try
+        {
+            var result = await _importService.ImportOrdersAsync(filePath);
+
+            if (result.Errors > 0 && result.Added == 0)
+            {
+                _notify.Error($"Сбой импорта.\n{result.ErrorDetails}");
+            }
+            else
+            {
+                string message = $"Импорт завершен.\nДобавлено заказов: {result.Added}";
+                if (result.Errors > 0)
+                {
+                    message += $"\nОшибок: {result.Errors}. Подробности смотри в логе.";
+                    _notify.Warning(message);
+                }
+                else
+                {
+                    _notify.Success(message);
+                }
+
+                _ = LoadDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _notify.Error($"Ошибка чтения файла: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -65,14 +115,14 @@ public partial class OrdersViewModel : ViewModelBase
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
             var query = context.Orders.AsNoTracking().AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(HighlightText))
-            {
-                var search = HighlightText.ToLower();
-                query = query.Where(o =>
-                    (o.Customer != null && o.Customer.Name.ToLower().Contains(search)) ||
-                    o.OrderID.ToString() == search);
-            }
+            
+            //if (!string.IsNullOrWhiteSpace(HighlightText))
+            //{
+            //    var search = HighlightText.ToLower();
+            //    query = query.Where(o =>
+            //        (o.Customer != null && o.Customer.Name.ToLower().Contains(search)) ||
+            //        o.OrderID.ToString() == search);
+            //}
 
             switch (SelectedFilterIndex)
             {
@@ -123,7 +173,7 @@ public partial class OrdersViewModel : ViewModelBase
         }
     }
 
-    partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
+    //partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
     partial void OnSelectedFilterIndexChanged(int value) => _ = LoadDataAsync();
     partial void OnDateFromFilterChanged(DateTime? value) => _ = LoadDataAsync();
     partial void OnDateToFilterChanged(DateTime? value) => _ = LoadDataAsync();
@@ -208,7 +258,6 @@ public partial class OrdersViewModel : ViewModelBase
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
-
             var toDate = DateToFilter.Value.Date.AddDays(1).AddTicks(-1);
 
             var orders = await context.Orders

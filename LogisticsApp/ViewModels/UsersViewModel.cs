@@ -38,7 +38,6 @@ public sealed partial class UsersViewModel : ViewModelBase
         _dialogService = dialogService;
         _security = security;
 
-        // Инициализация загрузки данных при создании ViewModel
         _ = LoadUsersAsync();
     }
 
@@ -48,7 +47,8 @@ public sealed partial class UsersViewModel : ViewModelBase
     private async Task LoadUsersAsync()
     {
         await using var context = await _dbFactory.CreateDbContextAsync().ConfigureAwait(false);
-        var users = await context.Users.Include(u => u.Role).AsNoTracking().ToListAsync().ConfigureAwait(false);
+        // Убрали .Include(u => u.Role), так как ролей больше нет
+        var users = await context.Users.AsNoTracking().ToListAsync().ConfigureAwait(false);
 
         Application.Current.Dispatcher.Invoke(() =>
         {
@@ -88,7 +88,7 @@ public sealed partial class UsersViewModel : ViewModelBase
             if (user is not null)
             {
                 user.FullName = SelectedUser.FullName;
-                user.RoleID = SelectedUser.RoleID;
+                // Убрали обновление RoleID
 
                 if (!string.IsNullOrEmpty(newPasswordHash)) user.PasswordHash = newPasswordHash;
 
@@ -110,17 +110,13 @@ public sealed partial class UsersViewModel : ViewModelBase
             return;
         }
 
-        await using var context = await _dbFactory.CreateDbContextAsync().ConfigureAwait(false);
-
-        if (SelectedUser.Role?.Name == "Администратор" && await context.Users.CountAsync(u => u.Role!.Name == "Администратор").ConfigureAwait(false) <= 1)
-        {
-            _notify.Error("Критическая блокировка: В системе должен оставаться минимум один Администратор.");
-            return;
-        }
+        // Проверка на последнего администратора удалена, так как ролей больше нет
 
         if (_dialogService.ShowConfirmation("Удаление", $"Удалить доступ для сотрудника {SelectedUser.Login}?"))
         {
+            await using var context = await _dbFactory.CreateDbContextAsync().ConfigureAwait(false);
             var user = await context.Users.FindAsync(SelectedUser.UserID).ConfigureAwait(false);
+
             if (user is not null)
             {
                 context.Users.Remove(user);

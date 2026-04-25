@@ -51,7 +51,6 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Время" Binding="{Binding Timestamp, StringFormat=dd.MM.yyyy HH:mm:ss}" Width="150" Foreground="Gray" FontWeight="SemiBold"/>
                         <DataGridTextColumn Header="Действие" Binding="{Binding Action}" Width="100" FontWeight="Bold"/>
-                        <DataGridTextColumn Header="Пользователь" Binding="{Binding User.Login, TargetNullValue='Система'}" Width="150" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>
                         <DataGridTextColumn Header="Сущность" Binding="{Binding EntityName}" Width="150"/>
                         <DataGridTextColumn Header="Подробности" Binding="{Binding Details}" Width="*"/>
                     </DataGrid.Columns>

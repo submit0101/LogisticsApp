@@ -165,11 +165,7 @@ public class WaybillDocumentService : IWaybillDocumentService
             column.Item().Text($"№ авто: {documentData.VehicleModel} {documentData.VehicleRegistrationNumber}").Bold();
             column.Item().Text($"Маршрут: {documentData.RouteName}");
 
-            column.Item().PaddingTop(10).Row(row =>
-            {
-                row.RelativeItem().Text($"Отпуск разрешил: Руководитель {documentData.ManagerName}");
-                row.RelativeItem().Text($"Гл.бухгалтер {documentData.ChiefAccountantName}");
-            });
+            
         });
     }
 

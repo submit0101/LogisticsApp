@@ -88,15 +88,15 @@ public partial class DriversViewModel : ViewModelBase
             using var context = await _dbContextFactory.CreateDbContextAsync();
             var query = context.Drivers.AsNoTracking().AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(HighlightText))
-            {
-                var search = HighlightText.ToLower();
-                query = query.Where(d =>
-                    d.LastName.ToLower().Contains(search) ||
-                    d.FirstName.ToLower().Contains(search) ||
-                    d.LicenseNumber.ToLower().Contains(search) ||
-                    d.Phone.Contains(search));
-            }
+            //if (!string.IsNullOrWhiteSpace(HighlightText))
+            //{
+            //    var search = HighlightText.ToLower();
+            //    query = query.Where(d =>
+            //        d.LastName.ToLower().Contains(search) ||
+            //        d.FirstName.ToLower().Contains(search) ||
+            //        d.LicenseNumber.ToLower().Contains(search) ||
+            //        d.Phone.Contains(search));
+            //}
 
             if (SelectedStatusFilter.HasValue)
             {
@@ -142,7 +142,7 @@ public partial class DriversViewModel : ViewModelBase
         }
     }
 
-    partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
+    //partial void OnHighlightTextChanged(string value) => _ = LoadDataAsync();
     partial void OnSelectedStatusFilterChanged(DriverStatus? value) => _ = LoadDataAsync();
     partial void OnSelectedCategoryFilterChanged(string? value) => _ = LoadDataAsync();
     partial void OnEmploymentDateFromChanged(DateTime? value) => _ = LoadDataAsync();

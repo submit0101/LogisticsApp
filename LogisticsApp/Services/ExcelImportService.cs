@@ -667,4 +667,162 @@ public partial class ExcelImportService
         }
         return (added, updated, errors, errorDetails.ToString());
     }
+    public async Task<(int Added, int Updated, int Errors, string ErrorDetails)> ImportOrdersAsync(string filePath)
+    {
+        int added = 0;
+        int updated = 0; 
+        int errors = 0;
+        var errorDetails = new StringBuilder();
+
+        try
+        {
+            using var context = await _dbFactory.CreateDbContextAsync();
+            using var workbook = new XLWorkbook(filePath);
+            var worksheet = workbook.Worksheet(1);
+            var rows = worksheet.RowsUsed();
+
+         
+            int headerRowNumber = 1;
+
+            var customersByInn = await context.Customers.ToDictionaryAsync(c => c.INN);
+            var productsBySku = await context.Products.ToDictionaryAsync(p => p.SKU);
+
+      
+            int defaultWarehouseId = 1;
+            var firstWarehouse = await context.Warehouses.FirstOrDefaultAsync();
+            if (firstWarehouse != null) defaultWarehouseId = firstWarehouse.WarehouseID;
+
+
+            var ordersToCreate = new Dictionary<string, Order>();
+
+            foreach (var row in rows.Where(r => r.RowNumber() > headerRowNumber))
+            {
+                try
+                {
+                    string inn = row.Cell(1).GetString().Trim();
+                    string sku = row.Cell(2).GetString().Trim();
+                    string dateStr = row.Cell(3).GetString().Trim();
+
+                    if (string.IsNullOrWhiteSpace(inn) || string.IsNullOrWhiteSpace(sku)) continue;
+
+                    // Парсим количество (оно у тебя int в OrderItem)
+                    if (!int.TryParse(row.Cell(4).GetString().Trim(), out int quantity) || quantity <= 0)
+                    {
+                        errors++;
+                        errorDetails.AppendLine($"Строка {row.RowNumber()}: Некорректное количество товара.");
+                        continue;
+                    }
+
+                    // Парсим цену
+                    if (!decimal.TryParse(row.Cell(5).GetString().Trim().Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal price))
+                    {
+                        price = 0;
+                    }
+
+                    // 1. Ищем клиента
+                    if (!customersByInn.TryGetValue(inn, out var customer))
+                    {
+                        errors++;
+                        errorDetails.AppendLine($"Строка {row.RowNumber()}: Клиент с ИНН '{inn}' не найден в базе.");
+                        continue;
+                    }
+
+                    // 2. Ищем товар
+                    if (!productsBySku.TryGetValue(sku, out var product))
+                    {
+                        errors++;
+                        errorDetails.AppendLine($"Строка {row.RowNumber()}: Товар с артикулом (SKU) '{sku}' не найден.");
+                        continue;
+                    }
+
+
+                    var currentStock = await context.InventoryTransactions
+                        .Where(t => t.Product.ProductID == product.ProductID && t.WarehouseID == defaultWarehouseId)
+                        .SumAsync(t => t.Quantity);
+
+                    if (currentStock < quantity)
+                    {
+                        errors++;
+                        errorDetails.AppendLine($"Строка {row.RowNumber()}: Недостаточно товара '{product.Name}'. На складе: {currentStock}, в заказе: {quantity}.");
+                        continue;
+                    }
+
+
+                    if (!DateTime.TryParse(dateStr, out DateTime orderDate))
+                        orderDate = DateTime.Today;
+
+
+                    string orderKey = $"{inn}_{orderDate:yyyyMMdd}";
+
+                    if (!ordersToCreate.TryGetValue(orderKey, out var order))
+                    {
+                        order = new Order
+                        {
+                            CustomerID = customer.CustomerID,
+                            Customer = customer,
+                            OrderDate = orderDate,
+                            WarehouseID = defaultWarehouseId,
+                            Status = "Draft",             
+                            IsPosted = false,             
+                            Description = "Импорт из Excel",
+                            FulfillmentStatus = OrderFulfillmentStatus.NotAllocated,
+                            Priority = OrderPriority.Normal,
+                            Items = new List<OrderItem>()
+                        };
+                        ordersToCreate[orderKey] = order;
+                    }
+
+                    // 5. Добавляем строку товара в заказ
+                    order.Items.Add(new OrderItem
+                    {
+                        ProductID = product.ProductID,
+                        Product = product,
+                        Quantity = quantity,
+                        Price = price,
+                        TotalPrice = price * quantity,
+                        TotalWeight = 0 // Если у продукта будет свойство веса, можно будет умножить: quantity * product.Weight
+                    });
+                }
+                catch (Exception ex)
+                {
+                    errors++;
+                    errorDetails.AppendLine($"Строка {row.RowNumber()}: Ошибка формата данных. {ex.Message}");
+                }
+            }
+
+          
+            foreach (var newOrder in ordersToCreate.Values)
+            {
+               
+                newOrder.TotalSum = newOrder.Items.Sum(i => i.TotalPrice);
+                newOrder.WeightKG = newOrder.Items.Sum(i => i.TotalWeight);
+
+                context.Orders.Add(newOrder);
+                added++;
+
+                
+                foreach (var item in newOrder.Items)
+                {
+                    context.InventoryTransactions.Add(new InventoryTransaction
+                    {
+                        Timestamp = DateTime.Now,
+                        Product = item.Product,
+                        WarehouseID = newOrder.WarehouseID ?? defaultWarehouseId,
+                        Quantity = -item.Quantity, 
+                        IsReserve = true,          
+                        SourceDocument = "ImportOrders"
+                    });
+                }
+            }
+
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            errors++;
+            errorDetails.AppendLine($"Критический сбой импорта: {ex.Message}");
+        }
+
+        return (added, updated, errors, errorDetails.ToString());
+    }
 }
